@@ -18,6 +18,8 @@ const RADIO_BROWSER_ENDPOINT =
 
 interface FetchStationsOptions {
   signal?: AbortSignal;
+  offset?: number;
+  limit?: number;
 }
 
 export async function getTamilStations(
@@ -25,8 +27,12 @@ export async function getTamilStations(
 ): Promise<Station[]> {
   const url = new URL(RADIO_BROWSER_ENDPOINT);
 
+  const limit = options.limit ?? 32;
+  const offset = options.offset ?? 0;
+
   url.searchParams.set("language", "tamil");
-  url.searchParams.set("limit", "100");
+  url.searchParams.set("limit", String(limit));
+  url.searchParams.set("offset", String(offset));
   url.searchParams.set("order", "clickcount");
   url.searchParams.set("hidebroken", "true");
   url.searchParams.set("reverse", "true");
@@ -47,15 +53,10 @@ export async function getTamilStations(
 
   const data = (await response.json()) as Station[];
 
-  const httpsStations = data.filter(
-    (station) =>
-      station.ssl_error === 0 &&
-      typeof station.url_resolved === "string" &&
-      station.url_resolved.toLowerCase().startsWith("https://"),
-  );
-
+  // Allow both HTTPS and HTTP streams and rely on Radio Browser's
+  // own `hidebroken=true` filter. We only de-duplicate by UUID.
   const uniqueById = new Map<string, Station>();
-  for (const station of httpsStations) {
+  for (const station of data) {
     if (!uniqueById.has(station.stationuuid)) {
       uniqueById.set(station.stationuuid, station);
     }

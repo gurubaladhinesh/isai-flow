@@ -1,15 +1,17 @@
 import { getTamilStations } from "@/src/lib/radio-api";
-import { StationGrid } from "@/src/components/StationGrid";
+import { StationsPageClient } from "@/src/components/StationsPageClient";
 import Link from "next/link";
 import { Star } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const stations = await getTamilStations().catch((error: unknown) => {
-    console.error("Failed to load stations", error);
-    return [];
-  });
+  const stations = await getTamilStations({ offset: 0, limit: 32 }).catch(
+    (error: unknown) => {
+      console.error("Failed to load stations", error);
+      return [];
+    },
+  );
 
   return (
     <div className="flex h-full flex-1 flex-col gap-6">
@@ -45,8 +47,12 @@ export default async function HomePage() {
         </div>
       </header>
 
-      <section className="flex-1 overflow-auto pb-6">
-        <StationGrid stations={stations} />
+      <section className="flex-1 pb-6">
+        <StationsPageClient
+          initialStations={stations}
+          initialOffset={stations.length}
+          pageSize={32}
+        />
       </section>
     </div>
   );
