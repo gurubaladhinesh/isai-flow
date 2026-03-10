@@ -34,7 +34,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 <div className="absolute -left-32 top-[-10%] h-72 w-72 rounded-full bg-violet-600/20 blur-3xl" />
                 <div className="absolute right-[-10%] top-1/2 h-72 w-72 rounded-full bg-fuchsia-500/15 blur-3xl" />
               </div>
-              <div className="flex h-full w-full flex-col gap-6 px-4 pb-4 pt-6 sm:px-6 sm:pt-8">
+              <div className="mx-auto flex h-full max-w-6xl flex-col gap-6 px-4 pb-4 pt-6 sm:px-6 sm:pt-8">
                 {children}
               </div>
             </main>

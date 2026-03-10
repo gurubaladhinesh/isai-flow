@@ -1,9 +1,5 @@
 import { getTamilStations } from "@/src/lib/radio-api";
 import { StationGrid } from "@/src/components/StationGrid";
-import Link from "next/link";
-
-const GITHUB_REPO_URL =
-  process.env.NEXT_PUBLIC_GITHUB_REPO_URL ?? "https://github.com/";
 
 export const dynamic = "force-dynamic";
 
@@ -23,17 +19,6 @@ export default async function HomePage() {
           <p className="mt-1 text-xs text-zinc-400 sm:text-sm">
             Handpicked Tamil radio streams from around the world.
           </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link
-            href={GITHUB_REPO_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-medium text-zinc-200 transition hover:border-violet-400/60 hover:bg-violet-500/10 hover:text-white"
-          >
-            GitHub
-            <span className="text-zinc-500">· created using vibe coding</span>
-          </Link>
         </div>
       </header>
 
