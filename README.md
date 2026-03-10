@@ -1,3 +1,82 @@
+# Isai Flow – Tamil Internet Radio Aggregator
+
+Isai Flow is a single-page **Tamil internet radio** web app built with **Next.js 14 (App Router)**, **Tailwind CSS**, and **Lucide Icons**. It aggregates Tamil radio stations from the Radio Browser API and provides a Spotify-like listening experience.
+
+## Tech Stack
+
+- **Framework**: Next.js 14 (App Router)
+- **UI**: Tailwind CSS, Lucide Icons
+- **Language**: TypeScript / React
+- **Data Source**: [Radio Browser API](https://www.radio-browser.info/)
+
+## Features
+
+- Curated **Tamil** internet radio stations (tag-based search).
+- Only **HTTPS** streams are used (suitable for Vercel/Railway, avoids mixed content).
+- Global audio player with:
+  - Play / Pause
+  - Volume control
+  - Persistent `<audio>` element across navigation
+- Recent stations list in the sidebar.
+- Responsive station grid with up to **8 tiles per row** on large screens.
+- Loading skeletons for smooth perceived performance.
+- GitHub link badge: “created using vibe coding”.
+
+## Local Development
+
+```bash
+git clone https://github.com/gurubaladhinesh/isai-flow.git
+cd isai-flow
+
+npm install
+npm run dev
+```
+
+Then open `http://localhost:3000` in your browser.
+
+### Optional: Public Repo Link
+
+Set this to point the header GitHub badge to the correct repository:
+
+```bash
+# .env.local
+NEXT_PUBLIC_GITHUB_REPO_URL=https://github.com/gurubaladhinesh/isai-flow
+```
+
+## Railway Deployment
+
+1. Push your code to GitHub (already done for this repo).
+2. Go to [Railway](https://railway.app) and create a **New Project** → **Deploy from GitHub repo**.
+3. Choose `gurubaladhinesh/isai-flow`.
+4. Railway (via Nixpacks) should auto-detect commands:
+   - **Install**: `npm install`
+   - **Build**: `npm run build`
+   - **Start**: `npm run start`
+
+If these appear as editable fields, set them explicitly to:
+
+```bash
+npm install
+npm run build
+npm run start
+```
+
+### Railway Environment Variables
+
+In the Railway service **Variables** section, add:
+
+```bash
+NEXT_PUBLIC_GITHUB_REPO_URL=https://github.com/gurubaladhinesh/isai-flow
+```
+
+No secrets are required for the Radio Browser API — it’s a public HTTPS endpoint.
+
+Once deployed, Railway will give you a URL such as `https://<project-name>.up.railway.app`, which will serve the production build of Isai Flow.
+
+## License
+
+This project is currently unlicensed. If you intend to reuse or redistribute it, please add an appropriate license file first.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
