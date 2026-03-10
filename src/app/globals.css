@@ -8,10 +8,17 @@
   html,
   body {
     height: 100%;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
 
   body {
     @apply bg-[#050509] text-white antialiased;
+  }
+
+  ::-webkit-scrollbar {
+    display: none;
   }
 }
 

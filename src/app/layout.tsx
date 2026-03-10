@@ -29,12 +29,12 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <PlayerProvider>
           <div className="flex min-h-screen pb-16 sm:pb-20">
             <Sidebar />
-            <main className="relative flex-1 overflow-hidden">
-              <div className="pointer-events-none pointer-events-none absolute inset-0 -z-10 opacity-70">
+            <main className="relative flex-1">
+              <div className="pointer-events-none pointer-events-none absolute inset-0 -z-10 overflow-hidden opacity-70">
                 <div className="absolute -left-32 top-[-10%] h-72 w-72 rounded-full bg-violet-600/20 blur-3xl" />
                 <div className="absolute right-[-10%] top-1/2 h-72 w-72 rounded-full bg-fuchsia-500/15 blur-3xl" />
               </div>
-              <div className="mx-auto flex h-full max-w-6xl flex-col gap-6 px-4 pb-4 pt-6 sm:px-6 sm:pt-8">
+              <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pb-4 pt-6 sm:px-6 sm:pt-8">
                 {children}
               </div>
             </main>
