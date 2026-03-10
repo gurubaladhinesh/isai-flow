@@ -1,0 +1,11 @@
+name: Build Status
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: npm install  # Replace with 'pip install -r requirements.txt' for Python
+      - name: Run Build
+        run: npm run build # Replace with your test/build command
