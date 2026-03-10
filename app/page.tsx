@@ -1,9 +1,7 @@
 import { getTamilStations } from "@/src/lib/radio-api";
 import { StationGrid } from "@/src/components/StationGrid";
 import Link from "next/link";
-
-const GITHUB_REPO_URL =
-  process.env.NEXT_PUBLIC_GITHUB_REPO_URL ?? "https://github.com/";
+import { Star } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -26,13 +24,23 @@ export default async function HomePage() {
         </div>
         <div className="flex items-center gap-2">
           <Link
-            href={GITHUB_REPO_URL}
+            href="https://github.com/gurubaladhinesh/isai-flow"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-medium text-zinc-200 transition hover:border-violet-400/60 hover:bg-violet-500/10 hover:text-white"
+            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-4 py-1.5 text-[11px] font-semibold text-white shadow-lg shadow-violet-500/40 ring-1 ring-violet-300/70 transition hover:brightness-110 hover:shadow-violet-400/60"
           >
-            GitHub
-            <span className="text-zinc-500">· created using vibe coding</span>
+            <span className="rounded-full bg-black/30 px-2 py-0.5 text-[10px] uppercase tracking-wide">
+              GitHub
+            </span>
+            <span className="inline-flex items-center gap-1 text-[11px] leading-none">
+              Vibe Coded  – {" "}
+              <Star
+                className="h-3.5 w-3.5 text-yellow-300"
+                fill="currentColor"
+                aria-hidden="true"
+              />{" "}
+              the Repo if you like it
+            </span>
           </Link>
         </div>
       </header>
