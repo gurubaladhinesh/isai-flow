@@ -1,11 +1,13 @@
 # Isai Flow – Tamil Internet Radio Aggregator
 
+![Vibe Coding](https://img.shields.io/badge/Vibe-Coding-FF69B4?style=for-the-badge&logo=rocket)
+[![Build Status](https://github.com/gurubaladhinesh/isai-flow/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/gurubaladhinesh/isai-flow/actions/workflows/build.yml)
 ![GitHub stars](https://img.shields.io/github/stars/gurubaladhinesh/isai-flow?style=for-the-badge&color=FFD700)
 ![GitHub forks](https://img.shields.io/github/forks/gurubaladhinesh/isai-flow?style=for-the-badge&color=blue)
 ![GitHub issues](https://img.shields.io/github/issues/gurubaladhinesh/isai-flow?style=for-the-badge)
 ![Built with Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![Vibe Coding](https://img.shields.io/badge/Vibe-Coding-FF69B4?style=for-the-badge&logo=rocket)
+
 
 Isai Flow is a single-page **Tamil internet radio** web app built with **Next.js (App Router)**, **Tailwind CSS**, and **Lucide Icons**. It aggregates Tamil radio stations from the Radio Browser API and provides a Spotify-like listening experience.
 
