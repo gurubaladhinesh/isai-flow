@@ -13,7 +13,20 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Isai Flow – Tamil Internet Radio",
-  description: "Curated Tamil internet radio stations in a single player.",
+  description: "Curated Tamil internet radio stations in a single player. Listen to handpicked streams from around the world.",
+  keywords: ["Tamil Radio", "Isai Flow", "Internet Radio", "Tamil Music", "Live FM"],
+  openGraph: {
+    title: "Isai Flow – Tamil Internet Radio",
+    description: "Curated Tamil internet radio stations in a single player.",
+    type: "website",
+    locale: "ta_IN",
+    siteName: "Isai Flow",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Isai Flow – Tamil Internet Radio",
+    description: "Curated Tamil internet radio stations in a single player.",
+  },
 };
 
 interface RootLayoutProps {

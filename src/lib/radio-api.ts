@@ -44,7 +44,7 @@ export async function getTamilStations(
       "User-Agent": "isai-flow/1.0 (https://example.com)",
     },
     signal: options.signal,
-    cache: "no-store",
+    next: { revalidate: 3600 },
   });
 
   if (!response.ok) {

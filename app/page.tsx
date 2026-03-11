@@ -3,7 +3,7 @@ import { StationsPageClient } from "@/src/components/StationsPageClient";
 import Link from "next/link";
 import { Star } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600; // Revalidate every hour
 
 export default async function HomePage() {
   const stations = await getTamilStations({ offset: 0, limit: 32 }).catch(
@@ -18,7 +18,7 @@ export default async function HomePage() {
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="bg-gradient-to-r from-white via-violet-200 to-fuchsia-300 bg-clip-text text-2xl font-semibold tracking-tight text-transparent sm:text-3xl">
-            Isai Flow
+            Isai Flow – Tamil Radio
           </h1>
           <p className="mt-1 text-xs text-zinc-400 sm:text-sm">
             Handpicked Tamil radio streams from around the world.
@@ -48,6 +48,7 @@ export default async function HomePage() {
       </header>
 
       <section className="flex-1 pb-6">
+        <h2 className="sr-only">Available Tamil Radio Stations</h2>
         <StationsPageClient
           initialStations={stations}
           initialOffset={stations.length}
