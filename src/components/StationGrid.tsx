@@ -34,7 +34,7 @@ function StationTile({
     <button
       type="button"
       onClick={onPlay}
-      className="group relative flex flex-col overflow-hidden rounded-lg border border-white/5 bg-gradient-to-br from-white/5 via-white/2 to-black/40 p-2 text-left text-xs text-white shadow-md transition hover:border-violet-500/80 hover:shadow-lg hover:shadow-violet-500/15"
+      className="group relative flex cursor-pointer flex-col overflow-hidden rounded-lg border border-white/5 bg-gradient-to-br from-white/5 via-white/2 to-black/40 p-2 text-left text-xs text-white shadow-md transition-all duration-300 hover:scale-[1.02] hover:border-violet-500/80 hover:shadow-lg hover:shadow-violet-500/15"
     >
       <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-md bg-zinc-900">
         <Image

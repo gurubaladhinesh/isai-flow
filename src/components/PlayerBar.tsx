@@ -21,61 +21,97 @@ export function PlayerBar() {
   };
 
   return (
-    <div className="pointer-events-auto fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-black/60 px-3 py-2 text-xs text-white shadow-[0_-12px_50px_rgba(0,0,0,0.8)] backdrop-blur-xl sm:px-4 sm:py-3">
-      <div className="flex w-full items-center gap-3 sm:gap-4">
-        <button
-          type="button"
-          onClick={togglePlay}
-          disabled={!currentStation}
-          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-500/40 transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {isPlaying ? (
-            <Pause className="h-4 w-4" />
-          ) : (
-            <Play className="h-4 w-4 pl-0.5" />
-          )}
-        </button>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <div className="truncate text-[13px] font-semibold sm:text-sm">
-              {currentStation?.name ?? "Select a station to start listening"}
-            </div>
+    <div className="pointer-events-auto fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-black/40 px-4 py-3 text-white shadow-[0_-12px_40px_rgba(0,0,0,0.6)] backdrop-blur-2xl transition-all duration-500 sm:px-6">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+        {/* Left: Station Info */}
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-md bg-zinc-800 ring-1 ring-white/10 sm:h-12 sm:w-12">
+            {currentStation ? (
+              <img
+                src={currentStation.favicon || "/station-default.svg"}
+                alt={currentStation.name}
+                className="h-full w-full object-cover transition duration-500"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "/station-default.svg";
+                }}
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-zinc-900/50">
+                <div className="h-4 w-4 rounded-full border border-white/10 animate-pulse bg-white/5" />
+              </div>
+            )}
           </div>
-          <div className="mt-0.5 flex items-center gap-2 text-[11px] text-zinc-400">
-            <span className="truncate">
-              {currentStation?.state ||
-                currentStation?.country ||
-                (currentStation ? "Tamil Radio" : "Browse Tamil stations above")}
-            </span>
-            {currentStation?.bitrate ? (
-              <span className="hidden rounded-full border border-white/10 px-1.5 py-0.5 text-[10px] text-zinc-300 sm:inline-block">
-                {currentStation.bitrate} kbps
+          <div className="min-w-0">
+            <div className="truncate text-sm font-semibold tracking-tight sm:text-base">
+              {currentStation?.name ?? "Select a station"}
+            </div>
+            <div className="flex items-center gap-2 truncate text-[11px] text-zinc-400 sm:text-xs">
+              <span className="truncate">
+                {currentStation?.state ||
+                  currentStation?.country ||
+                  "Tamil Internet Radio"}
               </span>
-            ) : null}
+              {currentStation?.bitrate && (
+                <span className="hidden rounded-full border border-white/5 bg-white/5 px-1.5 py-0.5 text-[10px] text-zinc-500 sm:inline-block">
+                  {currentStation.bitrate}k
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-shrink-0 items-center gap-2 sm:gap-3">
+        {/* Center: Playback Controls */}
+        <div className="flex flex-1 items-center justify-center">
+          <button
+            type="button"
+            onClick={togglePlay}
+            disabled={!currentStation}
+            className="group relative flex h-10 w-10 items-center justify-center rounded-full bg-white text-black shadow-xl ring-4 ring-white/10 transition-all duration-300 hover:scale-110 active:scale-95 enabled:hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-20 sm:h-12 sm:w-12"
+            aria-label={isPlaying ? "Pause" : "Play"}
+          >
+            {isPlaying ? (
+              <Pause className="h-5 w-5 fill-current sm:h-6 sm:w-6" />
+            ) : (
+              <Play className="h-5 w-5 translate-x-0.5 fill-current sm:h-6 sm:w-6" />
+            )}
+            <div className="absolute inset-0 -z-10 animate-ping rounded-full bg-white/20 opacity-0 transition group-hover:opacity-100" />
+          </button>
+        </div>
+
+        {/* Right: Volume Controls */}
+        <div className="flex flex-1 items-center justify-end gap-3 sm:gap-4">
+          <div className="hidden items-center gap-3 sm:flex">
+            <button
+              type="button"
+              onClick={handleToggleMute}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 transition hover:bg-white/5 hover:text-white"
+            >
+              {volume === 0 ? (
+                <VolumeX className="h-4 w-4" />
+              ) : (
+                <Volume2 className="h-4 w-4" />
+              )}
+            </button>
+            <div className="group relative flex items-center">
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={Math.round(volume * 100)}
+                onChange={handleChangeVolume}
+                className="h-1.5 w-24 cursor-pointer appearance-none rounded-full bg-zinc-800 accent-white transition-all hover:bg-zinc-700 sm:w-28"
+              />
+            </div>
+          </div>
+          
+          {/* Mobile Mute only */}
           <button
             type="button"
             onClick={handleToggleMute}
-            className="flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-white/5 text-zinc-100 transition hover:border-violet-400/80 hover:bg-violet-500/20"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 transition hover:bg-white/5 hover:text-white sm:hidden"
           >
-            {volume === 0 ? (
-              <VolumeX className="h-4 w-4" />
-            ) : (
-              <Volume2 className="h-4 w-4" />
-            )}
+            {volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           </button>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={Math.round(volume * 100)}
-            onChange={handleChangeVolume}
-            className="h-1 w-24 cursor-pointer appearance-none rounded-full bg-zinc-700 outline-none sm:w-32"
-          />
         </div>
       </div>
     </div>
