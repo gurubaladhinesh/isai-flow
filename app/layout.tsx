@@ -12,21 +12,29 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Isai Flow – Tamil Internet Radio",
-  description: "Curated Tamil internet radio stations in a single player. Listen to handpicked streams from around the world.",
-  keywords: ["Tamil Radio", "Isai Flow", "Internet Radio", "Tamil Music", "Live FM"],
+  title: "Isai Flow – Listen to Tamil Radio Online | Best Live Tamil FM Stations",
+  description: "Experience the best Tamil radio online with Isai Flow. Listen to high-quality live Tamil FM stations, Carnatic music, and film hits from around the world in one premium player.",
+  keywords: ["Tamil Radio Online", "Live Tamil FM", "Isai Flow", "Tamil Internet Radio", "Tamil FM Stations", "Tamil Music Player", "Carnatic Radio"],
+  alternates: {
+    canonical: "https://isaiflow.in",
+  },
   openGraph: {
-    title: "Isai Flow – Tamil Internet Radio",
-    description: "Curated Tamil internet radio stations in a single player.",
+    title: "Isai Flow – Listen to Tamil Radio Online | Best Live Tamil FM Stations",
+    description: "Experience the best Tamil radio online with Isai Flow. Listen to high-quality live Tamil FM stations in one premium player.",
     type: "website",
+    url: "https://isaiflow.in",
     locale: "ta_IN",
     siteName: "Isai Flow",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Isai Flow – Tamil Internet Radio",
-    description: "Curated Tamil internet radio stations in a single player.",
+    title: "Isai Flow – Premium Tamil Internet Radio Player",
+    description: "The best way to listen to Tamil radio online. High-quality streams, minimal design.",
   },
+  robots: {
+    index: true,
+    follow: true,
+  }
 };
 
 interface RootLayoutProps {
@@ -34,8 +42,32 @@ interface RootLayoutProps {
 }
 
 export default function RootLayout({ children }: RootLayoutProps) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": ["WebSite", "LocalBusiness"],
+    "name": "Isai Flow",
+    "url": "https://isaiflow.in",
+    "description": "Premium Tamil internet radio streaming service.",
+    "logo": "https://isaiflow.in/favicon.ico",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "IN"
+    },
+    "sameAs": [
+      "https://github.com/gurubaladhinesh/isai-flow"
+    ]
+  };
+
   return (
     <html lang="ta" className="h-full">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        {/* Google Analytics Placeholder */}
+        {/* <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script> */}
+      </head>
       <body
         className={`${inter.variable} flex min-h-screen flex-col bg-[#050509] font-sans text-white`}
       >
