@@ -1,6 +1,6 @@
 "use client";
 
-import { Library, Clock } from "lucide-react";
+import { Library, Clock, Facebook, Twitter, Instagram, Youtube, Linkedin } from "lucide-react";
 import { usePlayer } from "@/src/context/PlayerContext";
 
 export function Sidebar() {
@@ -59,6 +59,28 @@ export function Sidebar() {
             </button>
           ))
         )}
+      </div>
+      <div className="mt-auto border-t border-white/5 pt-6 px-1">
+        <div className="text-[10px] uppercase tracking-widest text-zinc-600 font-bold mb-4">
+          Connect
+        </div>
+        <div className="grid grid-cols-5 gap-2">
+          <a href="https://facebook.com" target="_blank" rel="noreferrer" className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-zinc-400 transition hover:bg-white/10 hover:text-white" title="Facebook">
+            <Facebook className="h-4 w-4" />
+          </a>
+          <a href="https://twitter.com" target="_blank" rel="noreferrer" className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-zinc-400 transition hover:bg-white/10 hover:text-white" title="X (Twitter)">
+            <Twitter className="h-4 w-4" />
+          </a>
+          <a href="https://instagram.com" target="_blank" rel="noreferrer" className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-zinc-400 transition hover:bg-white/10 hover:text-white" title="Instagram">
+            <Instagram className="h-4 w-4" />
+          </a>
+          <a href="https://youtube.com" target="_blank" rel="noreferrer" className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-zinc-400 transition hover:bg-white/10 hover:text-white" title="YouTube">
+            <Youtube className="h-4 w-4" />
+          </a>
+          <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-zinc-400 transition hover:bg-white/10 hover:text-white" title="LinkedIn">
+            <Linkedin className="h-4 w-4" />
+          </a>
+        </div>
       </div>
     </aside>
   );

@@ -1,0 +1,20 @@
+# Isai Flow (isaiflow.in)
+
+Isai Flow is a premium, minimal Tamil internet radio player. It aggregates handpicked live Tamil FM stations and streams from around the globe into a single, high-performance web interface.
+
+## Core Features
+- **High-Quality Streams:** Direct access to live Tamil FM channels.
+- **Minimalist Design:** Focus on the music with zero distractions.
+- **Modern Tech:** Built with Next.js 16 and React 19 for speed and responsiveness.
+- **Global Availability:** Accessible anywhere with an internet connection.
+
+## Development Context
+- **Repository:** https://github.com/gurubaladhinesh/isai-flow
+- **Framework:** Next.js (App Router)
+- **Styling:** Tailwind CSS
+- **API:** Integrates with Radio Browser API for station discovery.
+
+## Useful Links
+- [Sitemap](https://isaiflow.in/sitemap.xml)
+- [Robots](https://isaiflow.in/robots.txt)
+- [Source Code](https://github.com/gurubaladhinesh/isai-flow)
