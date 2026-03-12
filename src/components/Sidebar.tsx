@@ -1,12 +1,12 @@
 "use client";
 
-import { Library, Clock, Star, Facebook, Twitter, Instagram, Youtube, Linkedin } from "lucide-react";
+import { Library, Clock, Star, Trash2, Facebook, Twitter, Instagram, Youtube, Linkedin } from "lucide-react";
 import { usePlayer } from "@/src/context/PlayerContext";
 import { useFavorites } from "@/src/context/FavoritesContext";
 
 export function Sidebar() {
   const { recentStations, playStation } = usePlayer();
-  const { favoriteStations } = useFavorites();
+  const { favoriteStations, toggleFavorite } = useFavorites();
 
   return (
     <aside className="hidden h-full w-64 flex-shrink-0 flex-col border-r border-white/5 bg-gradient-to-b from-[#111111] to-black/90 px-4 py-6 text-sm text-zinc-200 md:flex">
@@ -46,19 +46,32 @@ export function Sidebar() {
           </div>
         ) : (
           favoriteStations.map((station) => (
-            <button
+            <div
               key={station.stationuuid}
-              type="button"
-              onClick={() => playStation(station)}
-              className="flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-zinc-300 transition hover:bg-white/5 hover:text-white"
+              className="flex w-full items-center gap-1 rounded-md px-2 py-1.5 text-left text-zinc-300 transition hover:bg-white/5 group"
             >
-              <span className="line-clamp-1 text-[11px]">
-                {station.name || "Untitled Station"}
-              </span>
-              <span className="text-[10px] text-zinc-500">
-                {station.bitrate ? `${station.bitrate} kbps` : ""}
-              </span>
-            </button>
+              <button
+                type="button"
+                onClick={() => playStation(station)}
+                className="min-w-0 flex-1 text-left"
+              >
+                <span className="line-clamp-1 text-[11px]">
+                  {station.name || "Untitled Station"}
+                </span>
+                <span className="block text-[10px] text-zinc-500">
+                  {station.bitrate ? `${station.bitrate} kbps` : ""}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleFavorite(station)}
+                className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-zinc-400 transition hover:bg-white/10 hover:text-red-400"
+                aria-label="Remove from favorite"
+                title="Remove from favorite"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
           ))
         )}
       </div>

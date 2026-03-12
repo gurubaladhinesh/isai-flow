@@ -82,6 +82,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     if (currentStation) {
       const src = currentStation.url_resolved || currentStation.url;
       if (audio.src !== src) {
+        audio.pause();
         audio.src = src;
       }
     }
@@ -92,6 +93,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         try {
           await audio.play();
         } catch (error) {
+          if ((error as Error).name === "AbortError") return;
           console.error("Failed to play audio", error);
           setIsPlaying(false);
           setErrorMessage("Unable to start playback. Try another station.");
