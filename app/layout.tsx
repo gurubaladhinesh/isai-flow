@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { PlayerProvider } from "@/src/context/PlayerContext";
+import { FavoritesProvider } from "@/src/context/FavoritesContext";
 import { Sidebar } from "@/src/components/Sidebar";
 import { PlayerBar } from "@/src/components/PlayerBar";
 
@@ -72,6 +73,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
         className={`${inter.variable} flex min-h-screen flex-col bg-[#050509] font-sans text-white`}
       >
         <PlayerProvider>
+          <FavoritesProvider>
           <div className="flex min-h-screen pb-16 sm:pb-20">
             <Sidebar />
             <main className="relative flex-1">
@@ -85,6 +87,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
             </main>
           </div>
           <PlayerBar />
+          </FavoritesProvider>
         </PlayerProvider>
       </body>
     </html>

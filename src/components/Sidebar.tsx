@@ -1,10 +1,12 @@
 "use client";
 
-import { Library, Clock, Facebook, Twitter, Instagram, Youtube, Linkedin } from "lucide-react";
+import { Library, Clock, Star, Facebook, Twitter, Instagram, Youtube, Linkedin } from "lucide-react";
 import { usePlayer } from "@/src/context/PlayerContext";
+import { useFavorites } from "@/src/context/FavoritesContext";
 
 export function Sidebar() {
   const { recentStations, playStation } = usePlayer();
+  const { favoriteStations } = useFavorites();
 
   return (
     <aside className="hidden h-full w-64 flex-shrink-0 flex-col border-r border-white/5 bg-gradient-to-b from-[#111111] to-black/90 px-4 py-6 text-sm text-zinc-200 md:flex">
@@ -33,11 +35,40 @@ export function Sidebar() {
       </nav>
 
       <div className="mt-8 flex items-center gap-2 px-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+        <Star className="h-3 w-3" />
+        <span>Favorites</span>
+      </div>
+
+      <div className="mt-3 space-y-1 pr-1 text-xs">
+        {favoriteStations.length === 0 ? (
+          <div className="rounded-md px-2 py-2 text-[11px] text-zinc-500">
+            Star stations from the dashboard to add them here.
+          </div>
+        ) : (
+          favoriteStations.map((station) => (
+            <button
+              key={station.stationuuid}
+              type="button"
+              onClick={() => playStation(station)}
+              className="flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-zinc-300 transition hover:bg-white/5 hover:text-white"
+            >
+              <span className="line-clamp-1 text-[11px]">
+                {station.name || "Untitled Station"}
+              </span>
+              <span className="text-[10px] text-zinc-500">
+                {station.bitrate ? `${station.bitrate} kbps` : ""}
+              </span>
+            </button>
+          ))
+        )}
+      </div>
+
+      <div className="mt-8 flex items-center gap-2 px-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">
         <Clock className="h-3 w-3" />
         <span>Recent</span>
       </div>
 
-      <div className="mt-3 flex-1 space-y-1 overflow-y-auto pr-1 text-xs">
+      <div className="mt-3 flex-1 min-h-0 space-y-1 overflow-y-auto pr-1 text-xs">
         {recentStations.length === 0 ? (
           <div className="rounded-md px-2 py-2 text-[11px] text-zinc-500">
             Stations you play will appear here.

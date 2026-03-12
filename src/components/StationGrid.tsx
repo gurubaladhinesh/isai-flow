@@ -1,10 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { PlayCircle } from "lucide-react";
+import { PlayCircle, Star } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { Station } from "@/src/lib/radio-api";
 import { usePlayer } from "@/src/context/PlayerContext";
+import { useFavorites } from "@/src/context/FavoritesContext";
 
 interface StationGridProps {
   stations: Station[];
@@ -15,11 +16,15 @@ function StationTile({
   isCurrent,
   isPlaying,
   onPlay,
+  isFavorite,
+  onToggleFavorite,
 }: {
   station: Station;
   isCurrent: boolean;
   isPlaying: boolean;
   onPlay: () => void;
+  isFavorite: boolean;
+  onToggleFavorite: (e: React.MouseEvent) => void;
 }) {
   const [logoOk, setLogoOk] = useState(true);
 
@@ -30,10 +35,19 @@ function StationTile({
     return candidate;
   }, [station.favicon, logoOk]);
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onPlay();
+    }
+  };
+
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onPlay}
+      onKeyDown={handleKeyDown}
       className="group relative flex cursor-pointer flex-col overflow-hidden rounded-lg border border-white/5 bg-gradient-to-br from-white/5 via-white/2 to-black/40 p-2 text-left text-xs text-white shadow-md transition-all duration-300 hover:scale-[1.02] hover:border-violet-500/80 hover:shadow-lg hover:shadow-violet-500/15"
     >
       <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-md bg-zinc-900">
@@ -57,6 +71,17 @@ function StationTile({
             Live
           </div>
         ) : null}
+        <button
+          type="button"
+          onClick={onToggleFavorite}
+          className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-zinc-400 backdrop-blur transition hover:bg-black/70 hover:text-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400/50"
+          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+          title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+        >
+          <Star
+            className={`h-4 w-4 ${isFavorite ? "fill-yellow-400 text-yellow-400" : ""}`}
+          />
+        </button>
       </div>
 
       <div className="space-y-0.5">
@@ -74,12 +99,13 @@ function StationTile({
           ) : null}
         </div>
       </div>
-    </button>
+    </div>
   );
 }
 
 export function StationGrid({ stations }: StationGridProps) {
   const { playStation, currentStation, isPlaying } = usePlayer();
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   if (stations.length === 0) {
     return (
@@ -101,6 +127,12 @@ export function StationGrid({ stations }: StationGridProps) {
             isCurrent={isCurrent}
             isPlaying={isPlaying}
             onPlay={() => playStation(station)}
+            isFavorite={isFavorite(station.stationuuid)}
+            onToggleFavorite={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleFavorite(station);
+            }}
           />
         );
       })}
