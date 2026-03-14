@@ -75,6 +75,27 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     setVolumeState(clamped);
   }, []);
 
+  // Keyboard shortcut: spacebar to toggle play/pause
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Ignore if user is typing in an input field
+      if (
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+
+      if (event.code === "Space" && currentStation) {
+        event.preventDefault();
+        togglePlay();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [currentStation, togglePlay]);
+
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
