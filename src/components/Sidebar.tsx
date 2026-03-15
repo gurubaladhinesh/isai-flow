@@ -1,10 +1,12 @@
 "use client";
 
-import { Library, Clock, Facebook, Twitter, Instagram, Youtube, Linkedin } from "lucide-react";
+import { Library, Clock, Star, Trash2, Facebook, Twitter, Instagram, Youtube, Linkedin } from "lucide-react";
 import { usePlayer } from "@/src/context/PlayerContext";
+import { useFavorites } from "@/src/context/FavoritesContext";
 
 export function Sidebar() {
   const { recentStations, playStation } = usePlayer();
+  const { favoriteStations, toggleFavorite } = useFavorites();
 
   return (
     <aside className="hidden h-full w-64 flex-shrink-0 flex-col border-r border-white/5 bg-gradient-to-b from-[#111111] to-black/90 px-4 py-6 text-sm text-zinc-200 md:flex">
@@ -33,11 +35,53 @@ export function Sidebar() {
       </nav>
 
       <div className="mt-8 flex items-center gap-2 px-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+        <Star className="h-3 w-3" />
+        <span>Favorites</span>
+      </div>
+
+      <div className="mt-3 space-y-1 pr-1 text-xs">
+        {favoriteStations.length === 0 ? (
+          <div className="rounded-md px-2 py-2 text-[11px] text-zinc-500">
+            Star stations from the dashboard to add them here.
+          </div>
+        ) : (
+          favoriteStations.map((station) => (
+            <div
+              key={station.stationuuid}
+              className="flex w-full items-center gap-1 rounded-md px-2 py-1.5 text-left text-zinc-300 transition hover:bg-white/5 group"
+            >
+              <button
+                type="button"
+                onClick={() => playStation(station)}
+                className="min-w-0 flex-1 text-left"
+              >
+                <span className="line-clamp-1 text-[11px]">
+                  {station.name || "Untitled Station"}
+                </span>
+                <span className="block text-[10px] text-zinc-500">
+                  {station.bitrate ? `${station.bitrate} kbps` : ""}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleFavorite(station)}
+                className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-zinc-400 transition hover:bg-white/10 hover:text-red-400"
+                aria-label="Remove from favorite"
+                title="Remove from favorite"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="mt-8 flex items-center gap-2 px-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">
         <Clock className="h-3 w-3" />
         <span>Recent</span>
       </div>
 
-      <div className="mt-3 flex-1 space-y-1 overflow-y-auto pr-1 text-xs">
+      <div className="mt-3 flex-1 min-h-0 space-y-1 overflow-y-auto pr-1 text-xs">
         {recentStations.length === 0 ? (
           <div className="rounded-md px-2 py-2 text-[11px] text-zinc-500">
             Stations you play will appear here.
