@@ -8,16 +8,16 @@ export function Sidebar() {
 
   return (
     <aside className="hidden h-full w-64 flex-shrink-0 flex-col border-r border-white/5 bg-gradient-to-b from-[#111111] to-black/90 px-4 py-6 text-sm text-zinc-200 md:flex">
-      <div className="mb-8 flex items-center gap-2 px-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 text-xs font-semibold">
-          இ
+      <div className="mb-6 flex items-center gap-2">
+        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 text-xs font-semibold">
+          IF
         </div>
         <div>
-          <div className="text-xs uppercase tracking-[0.25em] text-zinc-500">
+          <div className="text-[13px] font-semibold tracking-tight text-white">
             Isai Flow
           </div>
-          <div className="text-[11px] text-zinc-500">
-            Tamil Internet Radio
+          <div className="text-[10px] text-zinc-500">
+            Multi-Language Internet Radio
           </div>
         </div>
       </div>
@@ -32,7 +32,7 @@ export function Sidebar() {
         </button>
       </nav>
 
-      <div className="mt-8 flex items-center gap-2 px-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+      <div className="mt-6 flex items-center gap-2 px-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">
         <Clock className="h-3 w-3" />
         <span>Recent</span>
       </div>
@@ -85,4 +85,3 @@ export function Sidebar() {
     </aside>
   );
 }
-

@@ -2,8 +2,13 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { PlayerProvider } from "@/src/context/PlayerContext";
+import { CountryProvider } from "@/src/context/CountryContext";
+import { LanguageProvider } from "@/src/context/LanguageContext";
+import { DynamicLanguagesProvider } from "@/src/context/DynamicLanguagesContext";
 import { Sidebar } from "@/src/components/Sidebar";
 import { PlayerBar } from "@/src/components/PlayerBar";
+import { CountrySwitcher } from "@/src/components/CountrySwitcher";
+import { LanguageSwitcher } from "@/src/components/LanguageSwitcher";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -12,24 +17,24 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Isai Flow – Listen to Tamil Radio Online | Best Live Tamil FM Stations",
-  description: "Experience the best Tamil radio online with Isai Flow. Listen to high-quality live Tamil FM stations, Carnatic music, and film hits from around the world in one premium player.",
-  keywords: ["Tamil Radio Online", "Live Tamil FM", "Isai Flow", "Tamil Internet Radio", "Tamil FM Stations", "Tamil Music Player", "Carnatic Radio"],
+  title: "Isai Flow – Multi-Language Internet Radio | Listen to Radio Worldwide",
+  description: "Isai Flow is a multi-language internet radio aggregator. Listen to live radio stations from around the world in your preferred country and language. High-quality streams, minimal design.",
+  keywords: ["Online Radio", "Live Radio", "Internet Radio", "Multi-Language Radio", "Isai Flow", "Radio Aggregator", "World Radio"],
   alternates: {
     canonical: "https://isaiflow.in",
   },
   openGraph: {
-    title: "Isai Flow – Listen to Tamil Radio Online | Best Live Tamil FM Stations",
-    description: "Experience the best Tamil radio online with Isai Flow. Listen to high-quality live Tamil FM stations in one premium player.",
+    title: "Isai Flow – Multi-Language Internet Radio",
+    description: "Listen to live radio stations from around the world in your preferred country and language.",
     type: "website",
     url: "https://isaiflow.in",
-    locale: "ta_IN",
+    locale: "en_US",
     siteName: "Isai Flow",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Isai Flow – Premium Tamil Internet Radio Player",
-    description: "The best way to listen to Tamil radio online. High-quality streams, minimal design.",
+    title: "Isai Flow – Multi-Language Internet Radio",
+    description: "The best way to listen to radio online. High-quality streams, minimal design.",
   },
   robots: {
     index: true,
@@ -44,50 +49,55 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": ["WebSite", "LocalBusiness"],
+    "@type": ["WebSite", "MobileApplication"],
     "name": "Isai Flow",
     "url": "https://isaiflow.in",
-    "description": "Premium Tamil internet radio streaming service.",
+    "description": "Multi-language internet radio streaming service.",
     "logo": "https://isaiflow.in/favicon.ico",
-    "address": {
-      "@type": "PostalAddress",
-      "addressCountry": "IN"
-    },
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Web Browser",
     "sameAs": [
       "https://github.com/gurubaladhinesh/isai-flow"
     ]
   };
 
   return (
-    <html lang="ta" className="h-full">
+    <html lang="en" className="h-full">
       <head>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        {/* Google Analytics Placeholder */}
-        {/* <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script> */}
       </head>
       <body
         className={`${inter.variable} flex min-h-screen flex-col bg-[#050509] font-sans text-white`}
       >
         <PlayerProvider>
-          <div className="flex min-h-screen pb-16 sm:pb-20">
-            <Sidebar />
-            <main className="relative flex-1">
-              <div className="pointer-events-none pointer-events-none absolute inset-0 -z-10 overflow-hidden opacity-70">
-                <div className="absolute -left-32 top-[-10%] h-72 w-72 rounded-full bg-violet-600/20 blur-3xl" />
-                <div className="absolute right-[-10%] top-1/2 h-72 w-72 rounded-full bg-fuchsia-500/15 blur-3xl" />
-              </div>
-              <div className="flex w-full flex-col gap-6 px-4 pb-4 pt-6 sm:px-6 sm:pt-8">
-                {children}
-              </div>
-            </main>
-          </div>
-          <PlayerBar />
+          <CountryProvider>
+            <LanguageProvider>
+              <DynamicLanguagesProvider>
+                <div className="flex min-h-screen pb-16 sm:pb-20">
+                  <Sidebar />
+                  <main className="relative flex-1">
+                    <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden opacity-70">
+                      <div className="absolute -left-32 top-[-10%] h-72 w-72 rounded-full bg-violet-600/20 blur-3xl" />
+                      <div className="absolute right-[-10%] top-1/2 h-72 w-72 rounded-full bg-fuchsia-500/15 blur-3xl" />
+                    </div>
+                    <div className="flex w-full flex-col gap-6 px-4 pb-4 pt-6 sm:px-6 sm:pt-8">
+                      <div className="absolute right-4 top-4 z-30 flex gap-2 sm:right-6 sm:top-6">
+                        <LanguageSwitcher />
+                        <CountrySwitcher />
+                      </div>
+                      {children}
+                    </div>
+                  </main>
+                </div>
+                <PlayerBar />
+              </DynamicLanguagesProvider>
+            </LanguageProvider>
+          </CountryProvider>
         </PlayerProvider>
       </body>
     </html>
   );
 }
-

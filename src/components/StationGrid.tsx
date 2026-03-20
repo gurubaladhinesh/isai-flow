@@ -5,6 +5,7 @@ import { PlayCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { Station } from "@/src/lib/radio-api";
 import { usePlayer } from "@/src/context/PlayerContext";
+import { generatePlaceholderSvg, formatClickCount } from "@/src/lib/radio-api";
 
 interface StationGridProps {
   stations: Station[];
@@ -23,12 +24,17 @@ function StationTile({
 }) {
   const [logoOk, setLogoOk] = useState(true);
 
+  const placeholderSrc = useMemo(
+    () => generatePlaceholderSvg(station.tags || "", station.name || ""),
+    [station.tags, station.name],
+  );
+
   const logoSrc = useMemo(() => {
     const candidate = station.favicon?.trim();
-    if (!candidate) return "/station-default.svg";
-    if (!logoOk) return "/station-default.svg";
+    if (!candidate) return placeholderSrc;
+    if (!logoOk) return placeholderSrc;
     return candidate;
-  }, [station.favicon, logoOk]);
+  }, [station.favicon, logoOk, placeholderSrc]);
 
   return (
     <button
@@ -59,19 +65,38 @@ function StationTile({
         ) : null}
       </div>
 
-      <div className="space-y-0.5">
+      <div className="space-y-1">
         <div className="line-clamp-1 text-[12px] font-semibold">
           {station.name || "Untitled Station"}
         </div>
-        <div className="flex items-center justify-between text-[10px] text-zinc-400">
+        <div className="flex flex-wrap items-center gap-1 text-[10px] text-zinc-400">
           <span className="line-clamp-1">
-            {station.state || station.country || "Tamil"}
+            {station.state || station.country || ""}
           </span>
-          {station.bitrate ? (
-            <span className="ml-2 rounded-full border border-white/10 px-1.5 py-0.5 text-[10px]">
-              {station.bitrate}
+          {station.language && (
+            <span className="rounded-full border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] text-zinc-400">
+              {station.language}
             </span>
-          ) : null}
+          )}
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            {station.bitrate ? (
+              <span className="rounded-full border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] text-zinc-400">
+                {station.bitrate} kbps
+              </span>
+            ) : null}
+            {station.codec ? (
+              <span className="rounded-full border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] text-zinc-500">
+                {station.codec}
+              </span>
+            ) : null}
+          </div>
+          {station.clickcount > 0 && (
+            <span className="text-[10px] text-zinc-600" title={`${station.clickcount} clicks`}>
+              {formatClickCount(station.clickcount)} plays
+            </span>
+          )}
         </div>
       </div>
     </button>
@@ -107,4 +132,3 @@ export function StationGrid({ stations }: StationGridProps) {
     </div>
   );
 }
-

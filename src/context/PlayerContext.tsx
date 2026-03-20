@@ -11,11 +11,22 @@ import {
 } from "react";
 import type { Station } from "@/src/lib/radio-api";
 
+interface NowPlayingInfo {
+  title: string;
+  artist: string;
+}
+
+interface AudioAnalysisData {
+  frequencyData: Uint8Array;
+}
+
 interface PlayerContextValue {
   currentStation: Station | null;
   isPlaying: boolean;
   volume: number;
   recentStations: Station[];
+  nowPlaying: NowPlayingInfo | null;
+  audioData: AudioAnalysisData | null;
   playStation: (station: Station) => void;
   togglePlay: () => void;
   setVolume: (value: number) => void;
@@ -29,11 +40,65 @@ interface PlayerProviderProps {
 
 export function PlayerProvider({ children }: PlayerProviderProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const animationFrameRef = useRef<number>(0);
   const [currentStation, setCurrentStation] = useState<Station | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolumeState] = useState(0.8);
   const [recentStations, setRecentStations] = useState<Station[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [nowPlaying, setNowPlaying] = useState<NowPlayingInfo | null>(null);
+  const [audioData, setAudioData] = useState<AudioAnalysisData | null>(null);
+
+  const setupAudioAnalysis = useCallback(() => {
+    if (!audioRef.current || !audioContextRef.current) return;
+    
+    try {
+      if (!sourceRef.current) {
+        sourceRef.current = audioContextRef.current.createMediaElementSource(audioRef.current);
+        analyserRef.current = audioContextRef.current.createAnalyser();
+        analyserRef.current.fftSize = 256;
+        sourceRef.current.connect(analyserRef.current);
+        analyserRef.current.connect(audioContextRef.current.destination);
+      }
+    } catch (e) {
+      console.error("Failed to setup audio analysis:", e);
+    }
+  }, []);
+
+  const updateAudioDataRef = useRef<(() => void) | null>(null);
+
+  const updateAudioData = useCallback(() => {
+    if (!analyserRef.current || !isPlaying) {
+      setAudioData(null);
+      return;
+    }
+
+    const frequencyData = new Uint8Array(analyserRef.current.frequencyBinCount);
+    analyserRef.current.getByteFrequencyData(frequencyData);
+
+    setAudioData({ frequencyData });
+    animationFrameRef.current = requestAnimationFrame(updateAudioDataRef.current!);
+  }, [isPlaying]);
+
+  useEffect(() => {
+    updateAudioDataRef.current = updateAudioData;
+  }, [updateAudioData]);
+
+  useEffect(() => {
+    audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -50,9 +115,22 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     return () => window.clearTimeout(timeoutId);
   }, [errorMessage]);
 
+  useEffect(() => {
+    if (isPlaying && analyserRef.current) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      updateAudioData();
+    } else {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      setAudioData(null);
+    }
+  }, [isPlaying, updateAudioData]);
+
   const playStation = useCallback((station: Station) => {
     setCurrentStation(station);
     setIsPlaying(true);
+    setNowPlaying(null);
     setRecentStations((prev) => {
       const existingIndex = prev.findIndex(
         (s) => s.stationuuid === station.stationuuid,
@@ -75,10 +153,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     setVolumeState(clamped);
   }, []);
 
-  // Keyboard shortcut: spacebar to toggle play/pause
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Ignore if user is typing in an input field
       if (
         event.target instanceof HTMLInputElement ||
         event.target instanceof HTMLTextAreaElement
@@ -104,6 +180,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       const src = currentStation.url_resolved || currentStation.url;
       if (audio.src !== src) {
         audio.src = src;
+        if (audioContextRef.current?.state === "suspended") {
+          void audioContextRef.current.resume();
+        }
+        setupAudioAnalysis();
       }
     }
 
@@ -123,7 +203,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     };
 
     void playIfPossible();
-  }, [currentStation, isPlaying]);
+  }, [currentStation, isPlaying, setupAudioAnalysis]);
 
   const handleAudioError = useCallback(() => {
     setIsPlaying(false);
@@ -136,11 +216,13 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       isPlaying,
       volume,
       recentStations,
+      nowPlaying,
+      audioData,
       playStation,
       togglePlay,
       setVolume,
     }),
-    [currentStation, isPlaying, volume, recentStations, playStation, togglePlay, setVolume],
+    [currentStation, isPlaying, volume, recentStations, nowPlaying, audioData, playStation, togglePlay, setVolume],
   );
 
   return (
@@ -150,6 +232,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         ref={audioRef}
         className="hidden"
         onError={handleAudioError}
+        crossOrigin="anonymous"
         autoPlay
       />
       {errorMessage ? (
@@ -168,4 +251,3 @@ export function usePlayer() {
   }
   return ctx;
 }
-
