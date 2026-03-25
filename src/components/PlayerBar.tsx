@@ -2,10 +2,12 @@
 
 import { Pause, Play, Volume2, VolumeX } from "lucide-react";
 import { usePlayer } from "@/src/context/PlayerContext";
+import { useEffect, useRef } from "react";
 
 export function PlayerBar() {
   const { currentStation, isPlaying, togglePlay, volume, setVolume } =
     usePlayer();
+  const visualizerRef = useRef<HTMLDivElement>(null);
 
   const handleChangeVolume = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(event.target.value);
@@ -19,6 +21,24 @@ export function PlayerBar() {
       setVolume(0);
     }
   };
+
+  // Simple visualizer effect simulation
+  useEffect(() => {
+    if (!isPlaying || !visualizerRef.current) return;
+
+    const bars = visualizerRef.current.querySelectorAll('.visualizer-bar');
+    if (bars.length === 0) return;
+
+    const animate = () => {
+      bars.forEach(bar => {
+        const randomHeight = Math.floor(Math.random() * 20) + 5;
+        (bar as HTMLElement).style.height = `${randomHeight}px`;
+      });
+    };
+
+    const interval = setInterval(animate, 200);
+    return () => clearInterval(interval);
+  }, [isPlaying]);
 
   return (
     <div className="pointer-events-auto fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-black/40 px-4 py-3 text-white shadow-[0_-12px_40px_rgba(0,0,0,0.6)] backdrop-blur-2xl transition-all duration-500 sm:px-6">
@@ -37,7 +57,23 @@ export function PlayerBar() {
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-zinc-900/50">
-                <div className="h-4 w-4 rounded-full border border-white/10 animate-pulse bg-white/5" />
+                <span className="text-xl font-bold text-white">இ</span>
+              </div>
+            )}
+
+            {/* Visualizer */}
+            {isPlaying && currentStation && (
+              <div
+                ref={visualizerRef}
+                className="absolute inset-0 flex items-end justify-center gap-0.5 bg-black/50 p-1"
+              >
+                {Array.from({ length: 15 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="visualizer-bar w-1 rounded-full bg-violet-400 transition-all duration-200"
+                    style={{ height: '5px' }}
+                  />
+                ))}
               </div>
             )}
           </div>
@@ -103,7 +139,7 @@ export function PlayerBar() {
               />
             </div>
           </div>
-          
+
           {/* Mobile Mute only */}
           <button
             type="button"

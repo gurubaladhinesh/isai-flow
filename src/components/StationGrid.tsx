@@ -1,10 +1,12 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { PlayCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { Station } from "@/src/lib/radio-api";
 import { usePlayer } from "@/src/context/PlayerContext";
+import { createSlug } from "@/src/lib/slug";
 
 interface StationGridProps {
   stations: Station[];
@@ -31,9 +33,8 @@ function StationTile({
   }, [station.favicon, logoOk]);
 
   return (
-    <button
-      type="button"
-      onClick={onPlay}
+    <Link
+      href={`/station/${station.stationuuid}-${createSlug(station.name)}`}
       className="group relative flex cursor-pointer flex-col overflow-hidden rounded-lg border border-white/5 bg-gradient-to-br from-white/5 via-white/2 to-black/40 p-2 text-left text-xs text-white shadow-md transition-all duration-300 hover:scale-[1.02] hover:border-violet-500/80 hover:shadow-lg hover:shadow-violet-500/15"
     >
       <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-md bg-zinc-900">
@@ -46,11 +47,27 @@ function StationTile({
           onError={() => setLogoOk(false)}
         />
 
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 backdrop-blur-sm transition group-hover:opacity-100" />
+        <button
+          type="button"
+          className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 backdrop-blur-sm transition group-hover:opacity-100"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onPlay();
+          }}
+        />
 
-        <div className="pointer-events-none absolute bottom-1.5 right-1.5 opacity-0 drop-shadow-lg transition group-hover:opacity-100">
+        <button
+          type="button"
+          className="absolute bottom-1.5 right-1.5 opacity-0 drop-shadow-lg transition group-hover:opacity-100"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onPlay();
+          }}
+        >
           <PlayCircle className="h-7 w-7 text-violet-300" />
-        </div>
+        </button>
 
         {isCurrent && isPlaying ? (
           <div className="absolute left-1.5 top-1.5 rounded-full bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-emerald-300 backdrop-blur">
@@ -74,7 +91,7 @@ function StationTile({
           ) : null}
         </div>
       </div>
-    </button>
+    </Link>
   );
 }
 

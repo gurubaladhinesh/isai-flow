@@ -44,10 +44,10 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": ["WebSite", "LocalBusiness"],
+    "@type": ["WebSite", "RadioBroadcastService"],
     "name": "Isai Flow",
     "url": "https://isaiflow.in",
-    "description": "Premium Tamil internet radio streaming service.",
+    "description": "Premium Tamil internet radio streaming service featuring live Tamil FM stations, Carnatic music, and film hits from around the world.",
     "logo": "https://isaiflow.in/favicon.ico",
     "address": {
       "@type": "PostalAddress",
@@ -55,7 +55,16 @@ export default function RootLayout({ children }: RootLayoutProps) {
     },
     "sameAs": [
       "https://github.com/gurubaladhinesh/isai-flow"
-    ]
+    ],
+    "inLanguage": "ta",
+    "genre": ["Tamil Music", "Carnatic Music", "Tamil Film Songs", "FM Radio"],
+    "offers": {
+      "@type": "Offer",
+      "category": "Subscription",
+      "price": "0",
+      "priceCurrency": "USD",
+      "description": "Free access to Tamil radio stations worldwide"
+    }
   };
 
   return (

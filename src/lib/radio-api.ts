@@ -65,3 +65,36 @@ export async function getTamilStations(
   return Array.from(uniqueById.values());
 }
 
+/**
+ * Fetches a single station by its UUID
+ */
+export async function getStationById(uuid: string): Promise<Station | null> {
+  const url = `https://de1.api.radio-browser.info/json/stations/byuuid/${uuid}`;
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": "isai-flow/1.0 (https://isaiflow.in)",
+      },
+      next: { revalidate: 3600 }, // Revalidate every hour
+    });
+
+    if (!response.ok) {
+      console.error(`Failed to fetch station: ${response.statusText}`);
+      return null;
+    }
+
+    const data = (await response.json()) as Station[];
+
+    if (data.length === 0) {
+      return null;
+    }
+
+    return data[0];
+  } catch (error) {
+    console.error("Error fetching station:", error);
+    return null;
+  }
+}
