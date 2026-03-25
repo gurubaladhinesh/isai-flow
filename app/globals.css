@@ -26,5 +26,38 @@
   .glass-surface {
     @apply border border-white/10 bg-white/5 backdrop-blur-xl;
   }
-}
 
+  .station-tile {
+    cursor: pointer !important;
+  }
+
+  .station-tile * {
+    cursor: pointer !important;
+  }
+
+  .animate-spin-slow {
+    animation: spin 8s linear infinite;
+  }
+
+  .animate-pulse-ring {
+    animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes pulse-ring {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(167, 139, 250, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 0 8px rgba(167, 139, 250, 0);
+    }
+  }
+}

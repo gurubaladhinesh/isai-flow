@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://isaiflow.in",
   },
+  icons: {
+    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23111111' width='100' height='100' rx='20'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='white'>இ</text></svg>",
+  },
   openGraph: {
     title: "Isai Flow – Listen to Tamil Radio Online | Best Live Tamil FM Stations",
     description: "Experience the best Tamil radio online with Isai Flow. Listen to high-quality live Tamil FM stations in one premium player.",
