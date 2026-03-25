@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://isaiflow.in",
   },
+  icons: {
+    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23111111' width='100' height='100' rx='20'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='white'>இ</text></svg>",
+  },
   openGraph: {
     title: "Isai Flow – Listen to Tamil Radio Online | Best Live Tamil FM Stations",
     description: "Experience the best Tamil radio online with Isai Flow. Listen to high-quality live Tamil FM stations in one premium player.",
@@ -44,10 +47,10 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": ["WebSite", "LocalBusiness"],
+    "@type": ["WebSite", "RadioBroadcastService"],
     "name": "Isai Flow",
     "url": "https://isaiflow.in",
-    "description": "Premium Tamil internet radio streaming service.",
+    "description": "Premium Tamil internet radio streaming service featuring live Tamil FM stations, Carnatic music, and film hits from around the world.",
     "logo": "https://isaiflow.in/favicon.ico",
     "address": {
       "@type": "PostalAddress",
@@ -55,7 +58,16 @@ export default function RootLayout({ children }: RootLayoutProps) {
     },
     "sameAs": [
       "https://github.com/gurubaladhinesh/isai-flow"
-    ]
+    ],
+    "inLanguage": "ta",
+    "genre": ["Tamil Music", "Carnatic Music", "Tamil Film Songs", "FM Radio"],
+    "offers": {
+      "@type": "Offer",
+      "category": "Subscription",
+      "price": "0",
+      "priceCurrency": "USD",
+      "description": "Free access to Tamil radio stations worldwide"
+    }
   };
 
   return (

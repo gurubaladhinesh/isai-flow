@@ -29,6 +29,9 @@ interface PlayerProviderProps {
 
 export function PlayerProvider({ children }: PlayerProviderProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const isPlayingRef = useRef(false);
+  const isSwitchingRef = useRef(false);
+  const playPromiseRef = useRef<Promise<void> | null>(null);
   const [currentStation, setCurrentStation] = useState<Station | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolumeState] = useState(0.8);
@@ -42,6 +45,16 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     audio.volume = volume;
   }, [volume]);
 
+  // Keep refs in sync
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  const currentStationRef = useRef<Station | null>(null);
+  useEffect(() => {
+    currentStationRef.current = currentStation;
+  }, [currentStation]);
+
   useEffect(() => {
     if (!errorMessage) return;
     const timeoutId = window.setTimeout(() => {
@@ -51,6 +64,15 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   }, [errorMessage]);
 
   const playStation = useCallback((station: Station) => {
+    // Mark that we're switching to a new station
+    isSwitchingRef.current = true;
+
+    // Cancel any pending play promise
+    if (playPromiseRef.current) {
+      // The previous play() will be aborted, which is expected
+      playPromiseRef.current = null;
+    }
+
     setCurrentStation(station);
     setIsPlaying(true);
     setRecentStations((prev) => {
@@ -96,6 +118,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [currentStation, togglePlay]);
 
+  // Handle audio playback - use refs to avoid race conditions
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -103,16 +126,29 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     if (currentStation) {
       const src = currentStation.url_resolved || currentStation.url;
       if (audio.src !== src) {
+        // Mark that we're switching stations
+        isSwitchingRef.current = true;
         audio.src = src;
       }
     }
 
     const playIfPossible = async () => {
       if (!audio) return;
-      if (currentStation && isPlaying) {
+
+      // Use refs to get the latest values
+      const station = currentStationRef.current;
+      const shouldPlay = isPlayingRef.current;
+
+      if (station && shouldPlay) {
         try {
           await audio.play();
         } catch (error) {
+          // Ignore AbortError - this happens when switching stations quickly
+          // The previous play() was cancelled by a new load request or pause()
+          if (error instanceof DOMException && error.name === 'AbortError') {
+            // This is expected when switching stations, no need to show error
+            return;
+          }
           console.error("Failed to play audio", error);
           setIsPlaying(false);
           setErrorMessage("Unable to start playback. Try another station.");
@@ -120,6 +156,11 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       } else {
         audio.pause();
       }
+
+      // Clear switching flag after a short delay
+      setTimeout(() => {
+        isSwitchingRef.current = false;
+      }, 100);
     };
 
     void playIfPossible();

@@ -2,10 +2,13 @@
 
 import { Pause, Play, Volume2, VolumeX } from "lucide-react";
 import { usePlayer } from "@/src/context/PlayerContext";
+import { useEffect, useRef } from "react";
 
 export function PlayerBar() {
   const { currentStation, isPlaying, togglePlay, volume, setVolume } =
     usePlayer();
+  const leftVisualizerRef = useRef<HTMLDivElement>(null);
+  const rightVisualizerRef = useRef<HTMLDivElement>(null);
 
   const handleChangeVolume = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(event.target.value);
@@ -20,24 +23,78 @@ export function PlayerBar() {
     }
   };
 
+  // Enhanced visualizer effect with gradient colors - animates both left and right
+  useEffect(() => {
+    const refs = [leftVisualizerRef.current, rightVisualizerRef.current];
+
+    refs.forEach((ref) => {
+      if (!isPlaying || !ref) return;
+
+      const bars = ref.querySelectorAll('.visualizer-bar');
+      if (bars.length === 0) return;
+
+      const colors = ['bg-violet-400', 'bg-fuchsia-400', 'bg-purple-400', 'bg-indigo-400', 'bg-pink-400', 'bg-rose-400'];
+
+      const animate = () => {
+        bars.forEach((bar, index) => {
+          const randomHeight = Math.floor(Math.random() * 24) + 8;
+          (bar as HTMLElement).style.height = `${randomHeight}px`;
+          // Cycle through colors
+          bars.forEach((b, i) => {
+            b.classList.remove(...colors);
+            b.classList.add(colors[(i + index) % colors.length]);
+          });
+        });
+      };
+
+      const interval = setInterval(animate, 120);
+      return () => clearInterval(interval);
+    });
+  }, [isPlaying]);
+
+  const visualizerBars = (isLeft: boolean) => (
+    <div
+      ref={isLeft ? leftVisualizerRef : rightVisualizerRef}
+      className="flex h-10 items-end justify-center gap-0.5"
+    >
+      {Array.from({ length: 10 }).map((_, i) => (
+        <div
+          key={i}
+          className={`visualizer-bar w-1.5 rounded-full transition-all duration-150 ${
+            i % 6 === 0 ? 'bg-violet-400' :
+            i % 6 === 1 ? 'bg-fuchsia-400' :
+            i % 6 === 2 ? 'bg-purple-400' :
+            i % 6 === 3 ? 'bg-indigo-400' :
+            i % 6 === 4 ? 'bg-pink-400' : 'bg-rose-400'
+          }`}
+          style={{ height: '6px' }}
+        />
+      ))}
+    </div>
+  );
+
   return (
     <div className="pointer-events-auto fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-black/40 px-4 py-3 text-white shadow-[0_-12px_40px_rgba(0,0,0,0.6)] backdrop-blur-2xl transition-all duration-500 sm:px-6">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 sm:gap-4">
         {/* Left: Station Info */}
-        <div className="flex min-w-0 flex-1 items-center gap-3">
-          <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-md bg-zinc-800 ring-1 ring-white/10 sm:h-12 sm:w-12">
+        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+          <div className={`relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-md bg-zinc-800 ring-1 ring-white/10 sm:h-12 sm:w-12 ${isPlaying ? 'animate-pulse-ring' : ''}`}>
+            {/* Glow effect when playing */}
+            {isPlaying && (
+              <div className="absolute inset-0 animate-ping rounded-md bg-violet-500/30" />
+            )}
             {currentStation ? (
               <img
                 src={currentStation.favicon || "/station-default.svg"}
                 alt={currentStation.name}
-                className="h-full w-full object-cover transition duration-500"
+                className={`h-full w-full object-cover transition duration-500 ${isPlaying ? 'animate-spin-slow' : ''}`}
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = "/station-default.svg";
                 }}
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-zinc-900/50">
-                <div className="h-4 w-4 rounded-full border border-white/10 animate-pulse bg-white/5" />
+                <span className="text-xl font-bold text-white">இ</span>
               </div>
             )}
           </div>
@@ -60,26 +117,34 @@ export function PlayerBar() {
           </div>
         </div>
 
-        {/* Center: Playback Controls */}
-        <div className="flex flex-1 items-center justify-center">
+        {/* Center: Visualizer + Playback Controls + Visualizer */}
+        <div className="flex flex-1 items-center justify-center gap-2 sm:gap-3">
+          {isPlaying && currentStation && visualizerBars(true)}
+
           <button
             type="button"
             onClick={togglePlay}
             disabled={!currentStation}
-            className="group relative flex h-10 w-10 items-center justify-center rounded-full bg-white text-black shadow-xl ring-4 ring-white/10 transition-all duration-300 hover:scale-110 active:scale-95 enabled:hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-20 sm:h-12 sm:w-12"
+            className={`group relative flex h-10 w-10 items-center justify-center rounded-full bg-white text-black shadow-xl ring-4 ring-white/10 transition-all duration-300 hover:scale-110 active:scale-95 enabled:hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-20 sm:h-12 sm:w-12 ${isPlaying ? 'ring-violet-400/50' : ''}`}
             aria-label={isPlaying ? "Pause" : "Play"}
           >
             {isPlaying ? (
-              <Pause className="h-5 w-5 fill-current sm:h-6 sm:w-6" />
+              <Pause className="h-5 w-5 fill-current sm:h-6 sm:w-6 animate-pulse" />
             ) : (
               <Play className="h-5 w-5 translate-x-0.5 fill-current sm:h-6 sm:w-6" />
             )}
+            {/* Animated ring when playing */}
+            {isPlaying && (
+              <div className="absolute inset-0 -z-10 animate-ping rounded-full bg-violet-400/40" />
+            )}
             <div className="absolute inset-0 -z-10 animate-ping rounded-full bg-white/20 opacity-0 transition group-hover:opacity-100" />
           </button>
+
+          {isPlaying && currentStation && visualizerBars(false)}
         </div>
 
         {/* Right: Volume Controls */}
-        <div className="flex flex-1 items-center justify-end gap-3 sm:gap-4">
+        <div className="flex flex-1 items-center justify-end gap-2 sm:gap-4">
           <div className="hidden items-center gap-3 sm:flex">
             <button
               type="button"
@@ -103,7 +168,7 @@ export function PlayerBar() {
               />
             </div>
           </div>
-          
+
           {/* Mobile Mute only */}
           <button
             type="button"
@@ -117,4 +182,3 @@ export function PlayerBar() {
     </div>
   );
 }
-

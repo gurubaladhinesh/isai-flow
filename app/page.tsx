@@ -35,13 +35,7 @@ export default async function HomePage() {
               GitHub
             </span>
             <span className="inline-flex items-center gap-1 text-[11px] leading-none">
-              Vibe Coded. {" "}
-              <Star
-                className="h-3.5 w-3.5 text-yellow-300"
-                fill="currentColor"
-                aria-hidden="true"
-              />{" "}
-              the Repo if you like it
+              Vibe Coded
             </span>
           </Link>
         </div>
