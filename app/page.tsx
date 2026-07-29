@@ -5,7 +5,7 @@ import { StationsPageClient } from "@/src/components/StationsPageClient";
 export const revalidate = 3600; // Revalidate every hour
 
 export default async function HomePage() {
-  const stations = await getTamilStations({ offset: 0, limit: 32 }).catch(
+  const stations = await getTamilStations({ offset: 0, limit: 48 }).catch(
     (error: unknown) => {
       console.error("Failed to load stations", error);
       return [];
@@ -51,7 +51,7 @@ export default async function HomePage() {
           <StationsPageClient
             initialStations={stations}
             initialOffset={stations.length}
-            pageSize={32}
+            pageSize={48}
           />
         </Suspense>
       </section>

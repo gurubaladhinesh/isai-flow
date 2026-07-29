@@ -1,44 +1,58 @@
 "use client";
 
+import { forwardRef, memo, useCallback } from "react";
 import Link from "next/link";
 import { Heart, PlayCircle } from "lucide-react";
 import type { Station } from "@/src/lib/radio-api";
 import { usePlayer } from "@/src/context/PlayerContext";
 import { getStationUrl } from "@/src/lib/slug";
-import { StationArtwork } from "@/src/components/StationArtwork";
+import { StationArtworkThumb } from "@/src/components/StationArtwork";
+import { StationGridSkeleton } from "@/src/components/StationGridSkeleton";
 
 interface StationGridProps {
   stations: Station[];
+  loadingCount?: number;
+  priorityCount?: number;
+  loadTriggerIndex?: number;
+  onLoadTrigger?: (node: HTMLDivElement | null) => void;
 }
 
-function StationTile({
-  station,
-  isCurrent,
-  isPlaying,
-  onPlay,
-}: {
-  station: Station;
-  isCurrent: boolean;
-  isPlaying: boolean;
-  onPlay: () => void;
-}) {
+const StationTile = memo(
+  forwardRef<
+    HTMLDivElement,
+    {
+      station: Station;
+      isCurrent: boolean;
+      isPlaying: boolean;
+      onPlay: () => void;
+      priority?: boolean;
+    }
+  >(function StationTile(
+    { station, isCurrent, isPlaying, onPlay, priority },
+    ref,
+  ) {
   const { toggleFavorite, isFavorite } = usePlayer();
   const favorited = isFavorite(station.stationuuid);
 
   return (
-    <div className="station-tile group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[rgba(255,255,255,0.03)] p-2.5 text-left text-xs text-[var(--text)] transition duration-300 hover:border-[var(--accent)]/50 hover:bg-[rgba(47,158,138,0.08)]">
+    <div
+      ref={ref}
+      className="station-tile station-tile-virtualized group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[rgba(255,255,255,0.03)] p-2.5 text-left text-xs text-[var(--text)] transition duration-300 hover:border-[var(--accent)]/50 hover:bg-[rgba(47,158,138,0.08)]"
+    >
       <Link
         href={getStationUrl(station)}
         className="absolute inset-0 z-0"
         aria-label={`Open ${station.name}`}
+        prefetch
       />
 
       <div className="relative z-10 mb-2.5 aspect-square w-full overflow-hidden rounded-xl bg-[#15201c]">
-        <StationArtwork
+        <StationArtworkThumb
           src={station.favicon}
           alt={station.name || "Station"}
-          sizes="120px"
-          className="object-cover transition duration-300 group-hover:scale-105"
+          loading={priority ? "eager" : "lazy"}
+          decoding="async"
+          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
         />
 
         <button
@@ -93,12 +107,26 @@ function StationTile({
       </div>
     </div>
   );
-}
+  }),
+);
 
-export function StationGrid({ stations }: StationGridProps) {
+export function StationGrid({
+  stations,
+  loadingCount = 0,
+  priorityCount = 0,
+  loadTriggerIndex,
+  onLoadTrigger,
+}: StationGridProps) {
   const { playStation, currentStation, isPlaying } = usePlayer();
 
-  if (stations.length === 0) {
+  const handlePlay = useCallback(
+    (station: Station) => {
+      playStation(station);
+    },
+    [playStation],
+  );
+
+  if (stations.length === 0 && loadingCount === 0) {
     return (
       <div className="flex h-40 flex-1 items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-white/[0.02] text-sm text-[var(--muted)]">
         No stations match your search. Try another name or tag.
@@ -108,7 +136,7 @@ export function StationGrid({ stations }: StationGridProps) {
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
-      {stations.map((station) => {
+      {stations.map((station, index) => {
         const isCurrent = currentStation?.stationuuid === station.stationuuid;
 
         return (
@@ -117,10 +145,17 @@ export function StationGrid({ stations }: StationGridProps) {
             station={station}
             isCurrent={isCurrent}
             isPlaying={isPlaying}
-            onPlay={() => playStation(station)}
+            onPlay={() => handlePlay(station)}
+            priority={index < priorityCount}
+            ref={
+              loadTriggerIndex === index
+                ? onLoadTrigger
+                : undefined
+            }
           />
         );
       })}
+      {loadingCount > 0 ? <StationGridSkeleton count={loadingCount} inline /> : null}
     </div>
   );
 }

@@ -45,12 +45,16 @@ interface StationArtworkThumbProps {
   src?: string | null;
   alt: string;
   className?: string;
+  loading?: "eager" | "lazy";
+  decoding?: "async" | "sync" | "auto";
 }
 
 export function StationArtworkThumb({
   src,
   alt,
   className = "h-full w-full object-cover",
+  loading = "lazy",
+  decoding = "async",
 }: StationArtworkThumbProps) {
   const [failed, setFailed] = useState(false);
   const imageSrc = failed ? STATION_DEFAULT_ARTWORK : getStationArtworkUrl(src);
@@ -61,6 +65,8 @@ export function StationArtworkThumb({
       src={imageSrc}
       alt={alt}
       className={className}
+      loading={loading}
+      decoding={decoding}
       onError={(event) => {
         const target = event.currentTarget;
         if (target.src.endsWith(STATION_DEFAULT_ARTWORK)) return;

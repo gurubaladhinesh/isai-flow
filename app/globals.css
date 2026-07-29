@@ -19,13 +19,31 @@
     --font-body: "Noto Sans Tamil", "Outfit", system-ui, sans-serif;
   }
 
-  html,
-  body {
+  html {
     height: 100%;
     overflow-x: hidden;
+    scroll-behavior: smooth;
+    scroll-padding-bottom: 6rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 
   body {
+    height: 100%;
+    overflow-x: hidden;
     background:
       radial-gradient(1200px 600px at 10% -10%, rgba(47, 158, 138, 0.16), transparent 55%),
       radial-gradient(900px 500px at 90% 20%, rgba(212, 165, 116, 0.12), transparent 50%),
@@ -85,6 +103,15 @@
     cursor: pointer !important;
   }
 
+  .station-tile-virtualized {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 180px;
+  }
+
+  .section-heading {
+    contain: layout paint style;
+  }
+
   .text-brand-gradient {
     background: linear-gradient(120deg, #f7f2e8 10%, #d4a574 45%, #3ecfb4 100%);
     -webkit-background-clip: text;
@@ -111,5 +138,25 @@
     50% {
       transform: scaleY(1);
     }
+  }
+
+  /* Nested list scroll: contain overscroll + edge fade for discoverability */
+  .scroll-fade-y {
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      #000 12px,
+      #000 calc(100% - 12px),
+      transparent
+    );
+  }
+
+  .scroll-panel {
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
   }
 }
