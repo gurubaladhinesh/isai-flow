@@ -4,33 +4,41 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Clock, Heart, Library } from "lucide-react";
 import { usePlayer } from "@/src/context/PlayerContext";
+import { getStationUrl } from "@/src/lib/slug";
+import type { Station } from "@/src/lib/radio-api";
 
-function StationListButton({
-  name,
-  bitrate,
-  onClick,
+function StationListItem({
+  station,
+  onPlay,
   isActive,
 }: {
-  name: string;
-  bitrate?: number;
-  onClick: () => void;
+  station: Station;
+  onPlay: () => void;
   isActive?: boolean;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex min-h-9 w-full items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-left transition ${
+    <div
+      className={`flex min-h-9 w-full items-center gap-1 rounded-lg px-1 transition ${
         isActive
           ? "bg-[var(--accent)]/15 text-[var(--accent-bright)]"
           : "text-[var(--muted)] hover:bg-white/5 hover:text-[var(--text)]"
       }`}
     >
-      <span className="line-clamp-1 text-[12px]">{name || "Untitled Station"}</span>
-      <span className="shrink-0 text-[10px] text-[var(--muted)]">
-        {bitrate ? `${bitrate} kbps` : ""}
-      </span>
-    </button>
+      <Link
+        href={getStationUrl(station)}
+        className="line-clamp-1 min-w-0 flex-1 px-1.5 py-2 text-[12px]"
+      >
+        {station.name || "Untitled Station"}
+      </Link>
+      <button
+        type="button"
+        onClick={onPlay}
+        className="shrink-0 px-2 py-2 text-[10px] text-[var(--muted)] hover:text-[var(--accent-bright)]"
+        aria-label={`Play ${station.name}`}
+      >
+        {station.bitrate ? `${station.bitrate} kbps` : "Play"}
+      </button>
+    </div>
   );
 }
 
@@ -89,12 +97,11 @@ export function Sidebar() {
           </div>
         ) : (
           favoriteStations.map((station) => (
-            <StationListButton
+            <StationListItem
               key={station.stationuuid}
-              name={station.name}
-              bitrate={station.bitrate}
+              station={station}
               isActive={currentStation?.stationuuid === station.stationuuid}
-              onClick={() => playStation(station)}
+              onPlay={() => playStation(station)}
             />
           ))
         )}
@@ -111,12 +118,11 @@ export function Sidebar() {
           </div>
         ) : (
           recentStations.map((station) => (
-            <StationListButton
+            <StationListItem
               key={station.stationuuid}
-              name={station.name}
-              bitrate={station.bitrate}
+              station={station}
               isActive={currentStation?.stationuuid === station.stationuuid}
-              onClick={() => playStation(station)}
+              onPlay={() => playStation(station)}
             />
           ))
         )}
