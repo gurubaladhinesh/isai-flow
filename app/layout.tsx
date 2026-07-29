@@ -5,6 +5,9 @@ import { PlayerProvider } from "@/src/context/PlayerContext";
 import { Sidebar } from "@/src/components/Sidebar";
 import { PlayerBar } from "@/src/components/PlayerBar";
 import { MobileNav } from "@/src/components/MobileNav";
+import { Footer } from "@/src/components/Footer";
+import { SITE_NAME, SITE_URL } from "@/src/lib/site";
+import { buildWebsiteJsonLd } from "@/src/lib/seo";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -20,38 +23,39 @@ const notoTamil = Noto_Sans_Tamil({
 });
 
 export const metadata: Metadata = {
-  title: "Isai Flow – Listen to Tamil Radio Online | Best Live Tamil FM Stations",
+  metadataBase: new URL(SITE_URL),
+  title: `${SITE_NAME} – Listen to Tamil Radio Online | Best Live Tamil FM Stations`,
   description:
     "Experience the best Tamil radio online with Isai Flow. Listen to high-quality live Tamil FM stations, Carnatic music, and film hits from around the world in one premium player.",
-  keywords: [
-    "Tamil Radio Online",
-    "Live Tamil FM",
-    "Isai Flow",
-    "Tamil Internet Radio",
-    "Tamil FM Stations",
-    "Tamil Music Player",
-    "Carnatic Radio",
-  ],
   alternates: {
-    canonical: "https://isaiflow.in",
+    canonical: SITE_URL,
   },
   icons: {
     icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23121a17' width='100' height='100' rx='20'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='%233ecfb4'>இ</text></svg>",
   },
   openGraph: {
-    title: "Isai Flow – Listen to Tamil Radio Online | Best Live Tamil FM Stations",
+    title: `${SITE_NAME} – Listen to Tamil Radio Online | Best Live Tamil FM Stations`,
     description:
       "Experience the best Tamil radio online with Isai Flow. Listen to high-quality live Tamil FM stations in one premium player.",
     type: "website",
-    url: "https://isaiflow.in",
+    url: SITE_URL,
     locale: "ta_IN",
-    siteName: "Isai Flow",
+    siteName: SITE_NAME,
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: `${SITE_NAME} – Tamil Internet Radio`,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Isai Flow – Premium Tamil Internet Radio Player",
+    title: `${SITE_NAME} – Premium Tamil Internet Radio Player`,
     description:
       "The best way to listen to Tamil radio online. High-quality streams, minimal design.",
+    images: ["/opengraph-image"],
   },
   robots: {
     index: true,
@@ -64,33 +68,13 @@ interface RootLayoutProps {
 }
 
 export default function RootLayout({ children }: RootLayoutProps) {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": ["WebSite", "RadioBroadcastService"],
-    name: "Isai Flow",
-    url: "https://isaiflow.in",
-    description:
-      "Premium Tamil internet radio streaming service featuring live Tamil FM stations, Carnatic music, and film hits from around the world.",
-    logo: "https://isaiflow.in/favicon.ico",
-    address: {
-      "@type": "PostalAddress",
-      addressCountry: "IN",
-    },
-    sameAs: ["https://github.com/gurubaladhinesh/isai-flow"],
-    inLanguage: "ta",
-    genre: ["Tamil Music", "Carnatic Music", "Tamil Film Songs", "FM Radio"],
-    offers: {
-      "@type": "Offer",
-      category: "Subscription",
-      price: "0",
-      priceCurrency: "USD",
-      description: "Free access to Tamil radio stations worldwide",
-    },
-  };
+  const jsonLd = buildWebsiteJsonLd();
 
   return (
     <html lang="ta" className="h-full">
       <head>
+        <link rel="preconnect" href="https://de1.api.radio-browser.info" />
+        <link rel="dns-prefetch" href="https://de1.api.radio-browser.info" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -123,7 +107,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
                     </div>
                     <div>
                       <div className="font-display text-base font-semibold tracking-wide">
-                        Isai Flow
+                        {SITE_NAME}
                       </div>
                       <div className="text-[11px] text-[var(--muted)]">
                         Tamil Internet Radio
@@ -133,6 +117,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
                   <MobileNav />
                 </div>
                 {children}
+                <Footer />
               </div>
             </main>
           </div>

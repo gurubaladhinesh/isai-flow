@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getTamilStations } from "@/src/lib/radio-api";
 import { StationsPageClient } from "@/src/components/StationsPageClient";
 
@@ -46,11 +47,13 @@ export default async function HomePage() {
 
       <section className="flex-1 pb-6">
         <h2 className="sr-only">Available Tamil Radio Stations</h2>
-        <StationsPageClient
-          initialStations={stations}
-          initialOffset={stations.length}
-          pageSize={32}
-        />
+        <Suspense fallback={<div className="text-sm text-[var(--muted)]">Loading stations…</div>}>
+          <StationsPageClient
+            initialStations={stations}
+            initialOffset={stations.length}
+            pageSize={32}
+          />
+        </Suspense>
       </section>
     </div>
   );

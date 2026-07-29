@@ -1,10 +1,27 @@
-import { getStationById } from "@/src/lib/radio-api";
+import {
+  getRelatedStations,
+  getStationById,
+  getTamilStations,
+} from "@/src/lib/radio-api";
 import { notFound } from "next/navigation";
 import { MapPin, Signal, Headphones } from "lucide-react";
 import { Breadcrumb } from "@/src/components/Breadcrumb";
 import { StationPlayControls } from "@/src/components/StationPlayControls";
 import { StationArtwork } from "@/src/components/StationArtwork";
-import { extractStationId, getStationUrl } from "@/src/lib/slug";
+import { StationGrid } from "@/src/components/StationGrid";
+import {
+  createSlug,
+  extractStationId,
+  getStationUrl,
+} from "@/src/lib/slug";
+import { SITE_NAME, SITE_URL } from "@/src/lib/site";
+import {
+  buildBreadcrumbJsonLd,
+  buildStationJsonLd,
+  getStationOgImage,
+} from "@/src/lib/seo";
+
+export const revalidate = 3600;
 
 interface PageProps {
   params: Promise<{ id: string }> | { id: string };
@@ -14,6 +31,18 @@ async function resolveParams(params: PageProps["params"]) {
   return await Promise.resolve(params);
 }
 
+export async function generateStaticParams() {
+  try {
+    const stations = await getTamilStations({ limit: 100 });
+    return stations.map((station) => ({
+      id: `${station.stationuuid}-${createSlug(station.name)}`,
+    }));
+  } catch (error) {
+    console.error("Failed to generate static station params", error);
+    return [];
+  }
+}
+
 export async function generateMetadata({ params }: PageProps) {
   const resolved = await resolveParams(params);
   const stationId = extractStationId(resolved.id);
@@ -21,7 +50,7 @@ export async function generateMetadata({ params }: PageProps) {
 
   if (!station) {
     return {
-      title: "Station Not Found | Isai Flow",
+      title: `Station Not Found | ${SITE_NAME}`,
       description: "The requested Tamil radio station could not be found.",
     };
   }
@@ -32,34 +61,29 @@ export async function generateMetadata({ params }: PageProps) {
     : station.country;
   const bitrateInfo = station.bitrate ? `${station.bitrate} kbps` : "High quality";
   const path = getStationUrl(station);
+  const url = `${SITE_URL}${path}`;
+  const ogImage = getStationOgImage(station);
 
   return {
-    title: `${baseTitle} - Listen Live | Isai Flow Tamil Radio`,
-    description: `Listen to ${baseTitle} live on Isai Flow. ${location}. ${bitrateInfo} streaming. ${station.tags ? station.tags : "Tamil music and entertainment"}.`,
-    keywords: [
-      station.name,
-      "Tamil Radio",
-      station.country,
-      station.language,
-      "Live FM",
-      ...(station.tags ? station.tags.split(",") : []),
-    ],
+    title: `${baseTitle} - Listen Live | ${SITE_NAME} Tamil Radio`,
+    description: `Listen to ${baseTitle} live on ${SITE_NAME}. ${location}. ${bitrateInfo} streaming. ${station.tags ? station.tags : "Tamil music and entertainment"}.`,
     openGraph: {
-      title: `${baseTitle} - Listen Live on Isai Flow`,
+      title: `${baseTitle} - Listen Live on ${SITE_NAME}`,
       description: `Stream ${baseTitle} live. ${location}. ${bitrateInfo} audio quality.`,
       type: "website",
-      url: `https://isaiflow.in${path}`,
-      images: station.favicon ? [{ url: station.favicon }] : [],
+      url,
+      images: [{ url: ogImage, alt: baseTitle }],
       locale: "ta_IN",
-      siteName: "Isai Flow",
+      siteName: SITE_NAME,
     },
     twitter: {
       card: "summary_large_image",
       title: `${baseTitle} - Tamil Radio Live`,
-      description: `Listen to ${baseTitle} streaming on Isai Flow`,
+      description: `Listen to ${baseTitle} streaming on ${SITE_NAME}`,
+      images: [ogImage],
     },
     alternates: {
-      canonical: `https://isaiflow.in${path}`,
+      canonical: url,
     },
   };
 }
@@ -80,14 +104,31 @@ export default async function StationPage({ params }: PageProps) {
         .filter(Boolean)
     : [];
 
+  const locationLabel = station.state
+    ? `${station.state}, ${station.country}`
+    : station.country || "Worldwide";
+
+  const relatedStations = await getRelatedStations(station).catch(() => []);
+
   const breadcrumbItems = [
     { label: "Home", href: "/" },
     { label: "Stations", href: "/" },
     { label: station.name },
   ];
 
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd(breadcrumbItems);
+  const stationJsonLd = buildStationJsonLd(station);
+
   return (
     <div className="flex h-full flex-1 flex-col gap-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(stationJsonLd) }}
+      />
       <Breadcrumb items={breadcrumbItems} />
 
       <section className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[rgba(18,26,23,0.65)]">
@@ -117,11 +158,7 @@ export default async function StationPage({ params }: PageProps) {
               {station.country && (
                 <div className="flex items-center gap-1.5">
                   <MapPin className="h-4 w-4 text-[var(--accent-bright)]" />
-                  <span>
-                    {station.state
-                      ? `${station.state}, ${station.country}`
-                      : station.country}
-                  </span>
+                  <span>{locationLabel}</span>
                 </div>
               )}
 
@@ -173,11 +210,7 @@ export default async function StationPage({ params }: PageProps) {
             <dt className="text-xs uppercase tracking-wide text-[var(--muted)]">
               Location
             </dt>
-            <dd className="mt-1 text-sm text-[var(--text)]">
-              {station.state
-                ? `${station.state}, ${station.country}`
-                : station.country || "Worldwide"}
-            </dd>
+            <dd className="mt-1 text-sm text-[var(--text)]">{locationLabel}</dd>
           </div>
           <div>
             <dt className="text-xs uppercase tracking-wide text-[var(--muted)]">
@@ -199,14 +232,68 @@ export default async function StationPage({ params }: PageProps) {
           </div>
         </dl>
         <p className="mt-5 text-sm leading-relaxed text-[var(--muted)]">
-          Tune into {station.name} on Isai Flow for live Tamil programming.
+          Tune into {station.name} on {SITE_NAME} for live Tamil programming
+          from {locationLabel}.
           {tags.length > 0
-            ? ` Known for ${tags.slice(0, 3).join(", ")}.`
+            ? ` This station is known for ${tags.slice(0, 3).join(", ")}.`
             : ""}{" "}
-          Use Play to start streaming in the persistent player, or Favorite to
-          keep it in your library.
+          Press Play to start streaming in the persistent player, or save it to
+          your favorites for quick access later.
+        </p>
+        <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
+          {SITE_NAME} streams {station.name} directly in your browser — no app
+          download required. Works on mobile, tablet, and desktop with free,
+          high-quality Tamil radio.
         </p>
       </section>
+
+      <section className="rounded-3xl border border-[var(--border)] bg-white/[0.02] p-5 sm:p-6">
+        <h2 className="font-display text-lg font-semibold text-[var(--text)]">
+          Frequently asked questions
+        </h2>
+        <dl className="mt-4 space-y-4">
+          <div>
+            <dt className="text-sm font-medium text-[var(--text)]">
+              Is {station.name} free to listen?
+            </dt>
+            <dd className="mt-1 text-sm text-[var(--muted)]">
+              Yes. {SITE_NAME} provides free access to {station.name} and all
+              Tamil radio stations in our catalogue.
+            </dd>
+          </div>
+          <div>
+            <dt className="text-sm font-medium text-[var(--text)]">
+              Can I listen on my phone?
+            </dt>
+            <dd className="mt-1 text-sm text-[var(--muted)]">
+              Yes. Open this page on any mobile browser and tap Play to stream{" "}
+              {station.name} live.
+            </dd>
+          </div>
+          <div>
+            <dt className="text-sm font-medium text-[var(--text)]">
+              What audio quality does this stream offer?
+            </dt>
+            <dd className="mt-1 text-sm text-[var(--muted)]">
+              {station.bitrate > 0
+                ? `${station.name} streams at ${station.bitrate} kbps for clear Tamil audio.`
+                : `${station.name} offers variable bitrate streaming depending on your connection.`}
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      {relatedStations.length > 0 ? (
+        <section className="space-y-3">
+          <div>
+            <h2 className="font-display text-lg font-semibold">Related stations</h2>
+            <p className="text-sm text-[var(--muted)]">
+              More Tamil radio stations you might enjoy.
+            </p>
+          </div>
+          <StationGrid stations={relatedStations} />
+        </section>
+      ) : null}
     </div>
   );
 }

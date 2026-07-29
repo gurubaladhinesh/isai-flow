@@ -1,12 +1,13 @@
-import type { MetadataRoute } from 'next'
+import type { MetadataRoute } from "next";
+import { SITE_URL } from "@/src/lib/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
-      userAgent: '*',
-      allow: '/',
-      disallow: ['/api/', '/_next/', '/static/'],
+      userAgent: "*",
+      allow: "/",
+      disallow: ["/api/", "/_next/", "/static/"],
     },
-    sitemap: 'https://isaiflow.in/sitemap.xml',
-  }
+    sitemap: `${SITE_URL}/sitemap.xml`,
+  };
 }

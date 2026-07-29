@@ -1,6 +1,7 @@
 "use client";
 
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
 import type { Station } from "@/src/lib/radio-api";
 import { StationGrid } from "@/src/components/StationGrid";
@@ -25,7 +26,15 @@ export function StationsPageClient({
   const [loadError, setLoadError] = useState<string | null>(null);
   const deferredQuery = useDeferredValue(query.trim().toLowerCase());
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const searchParams = useSearchParams();
   const { favoriteStations, recentStations } = usePlayer();
+
+  useEffect(() => {
+    const initialQuery = searchParams.get("q");
+    if (initialQuery) {
+      setQuery(initialQuery);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!hasMore || deferredQuery) return;
