@@ -115,7 +115,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
               <div className="flex w-full flex-col gap-6 px-4 pb-4 pt-5 sm:px-6 sm:pt-7">
                 <div className="flex items-center justify-between md:hidden">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--accent-deep)] text-lg font-semibold text-[var(--accent-bright)] shadow-[0_0_24px_rgba(62,207,180,0.25)]">
+                    <div
+                      className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--accent-deep)] text-lg font-semibold text-[var(--accent-bright)] shadow-[0_0_24px_rgba(62,207,180,0.25)]"
+                      style={{ fontFamily: "var(--font-noto-tamil), sans-serif" }}
+                    >
                       இ
                     </div>
                     <div>

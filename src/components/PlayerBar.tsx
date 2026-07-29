@@ -80,7 +80,10 @@ export function PlayerBar() {
                 }}
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-lg text-[var(--accent-bright)]">
+              <div
+                className="flex h-full w-full items-center justify-center text-lg text-[var(--accent-bright)]"
+                style={{ fontFamily: "var(--font-noto-tamil), sans-serif" }}
+              >
                 இ
               </div>
             )}
@@ -100,7 +103,7 @@ export function PlayerBar() {
             )}
             <div className="flex items-center gap-2 truncate text-[11px] text-[var(--muted)] sm:text-xs">
               <span
-                className={`inline-flex items-center gap-1 ${
+                className={`inline-flex shrink-0 items-center gap-1 ${
                   isPlaying && !isBuffering
                     ? "text-[var(--accent-bright)]"
                     : ""
@@ -117,17 +120,19 @@ export function PlayerBar() {
                 />
                 {statusLabel}
               </span>
-              <span className="truncate">
-                {currentStation?.state ||
-                  currentStation?.country ||
-                  "Tamil Internet Radio"}
-              </span>
+              {currentStation ? (
+                <span className="truncate">
+                  {currentStation.state || currentStation.country || "Tamil"}
+                </span>
+              ) : null}
             </div>
           </div>
         </div>
 
-        <div className="flex flex-1 items-center justify-center gap-4">
-          <Equalizer active={Boolean(isPlaying && currentStation && !isBuffering)} />
+        <div className="flex flex-none items-center justify-center gap-3 sm:flex-1 sm:gap-4">
+          <div className="hidden sm:block">
+            <Equalizer active={Boolean(isPlaying && currentStation && !isBuffering)} />
+          </div>
 
           <button
             type="button"

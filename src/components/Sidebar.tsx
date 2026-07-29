@@ -48,7 +48,10 @@ export function Sidebar() {
   return (
     <aside className="hidden h-full w-64 flex-shrink-0 flex-col border-r border-[var(--border)] bg-[rgba(10,16,14,0.88)] px-4 py-6 text-sm backdrop-blur-xl md:flex">
       <Link href="/" className="mb-8 flex items-center gap-3 px-1">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--accent-deep)] text-xl font-semibold text-[var(--accent-bright)] shadow-[0_0_28px_rgba(62,207,180,0.28)]">
+        <div
+          className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--accent-deep)] text-xl font-semibold text-[var(--accent-bright)] shadow-[0_0_28px_rgba(62,207,180,0.28)]"
+          style={{ fontFamily: "var(--font-noto-tamil), sans-serif" }}
+        >
           இ
         </div>
         <div>

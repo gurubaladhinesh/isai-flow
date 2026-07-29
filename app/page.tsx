@@ -20,7 +20,10 @@ export default async function HomePage() {
 
         <div className="relative max-w-2xl">
           <div className="mb-4 hidden items-center gap-3 md:flex">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--accent-deep)] text-2xl font-semibold text-[var(--accent-bright)] shadow-[0_0_32px_rgba(62,207,180,0.3)]">
+            <div
+              className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--accent-deep)] text-2xl font-semibold text-[var(--accent-bright)] shadow-[0_0_32px_rgba(62,207,180,0.3)]"
+              style={{ fontFamily: "var(--font-noto-tamil), sans-serif" }}
+            >
               இ
             </div>
             <div>
