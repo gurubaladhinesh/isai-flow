@@ -25,6 +25,17 @@ export function getStationUrl(station: { stationuuid: string; name: string }): s
  * Parses station ID from a URL
  */
 export function parseStationUrl(url: string): string | null {
-  const match = url.match(/^\/station\/([a-f0-9-]+)(?:-[a-z0-9-]*)?$/i);
+  const match = url.match(/^\/station\/([a-f0-9-]+)(?:-[a-z0-9-\u0B80-\u0BFF]*)?$/i);
   return match ? match[1] : null;
+}
+
+/**
+ * Extracts a station UUID from a route param that may include an SEO slug.
+ * e.g. "96144e01-...-c81-radio-mirchi" → "96144e01-...-c81"
+ */
+export function extractStationId(param: string): string {
+  const uuidMatch = param.match(
+    /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i,
+  );
+  return uuidMatch ? uuidMatch[1] : param;
 }

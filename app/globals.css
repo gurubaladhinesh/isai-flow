@@ -3,28 +3,78 @@
 @layer base {
   :root {
     color-scheme: dark;
+    --bg: #0b1210;
+    --bg-elevated: #121a17;
+    --surface: rgba(255, 255, 255, 0.04);
+    --border: rgba(255, 255, 255, 0.08);
+    --text: #f4f0e6;
+    --muted: #9aa39a;
+    --accent: #2f9e8a;
+    --accent-bright: #3ecfb4;
+    --accent-deep: #1f6f62;
+    --warm: #d4a574;
+    --warm-soft: rgba(212, 165, 116, 0.18);
+    --danger: #e07a6a;
+    --font-display: "Outfit", system-ui, sans-serif;
+    --font-body: "Noto Sans Tamil", "Outfit", system-ui, sans-serif;
   }
 
   html,
   body {
     height: 100%;
     overflow-x: hidden;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
   }
 
   body {
-    @apply bg-[#050509] text-white antialiased;
+    background:
+      radial-gradient(1200px 600px at 10% -10%, rgba(47, 158, 138, 0.16), transparent 55%),
+      radial-gradient(900px 500px at 90% 20%, rgba(212, 165, 116, 0.12), transparent 50%),
+      linear-gradient(180deg, #0e1613 0%, var(--bg) 40%, #090e0c 100%);
+    color: var(--text);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
   }
 
-  ::-webkit-scrollbar {
-    display: none;
+  ::selection {
+    background: rgba(47, 158, 138, 0.35);
+    color: white;
+  }
+
+  /* Thin, visible scrollbars for discoverability */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent-bright);
+    outline-offset: 2px;
   }
 }
 
 @layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
   .glass-surface {
-    @apply border border-white/10 bg-white/5 backdrop-blur-xl;
+    border: 1px solid var(--border);
+    background: rgba(18, 26, 23, 0.72);
+    backdrop-filter: blur(18px);
   }
 
   .station-tile {
@@ -35,29 +85,31 @@
     cursor: pointer !important;
   }
 
-  .animate-spin-slow {
-    animation: spin 8s linear infinite;
+  .text-brand-gradient {
+    background: linear-gradient(120deg, #f7f2e8 10%, #d4a574 45%, #3ecfb4 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 
-  .animate-pulse-ring {
-    animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  .bg-mesh {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 48px 48px;
   }
 
-  @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
+  .animate-eq {
+    animation: eq-bounce 0.9s ease-in-out infinite;
   }
 
-  @keyframes pulse-ring {
-    0%, 100% {
-      box-shadow: 0 0 0 0 rgba(167, 139, 250, 0.4);
+  @keyframes eq-bounce {
+    0%,
+    100% {
+      transform: scaleY(0.35);
     }
     50% {
-      box-shadow: 0 0 0 8px rgba(167, 139, 250, 0);
+      transform: scaleY(1);
     }
   }
 }
