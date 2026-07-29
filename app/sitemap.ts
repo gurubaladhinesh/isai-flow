@@ -5,8 +5,10 @@ import { createSlug } from '@/src/lib/slug'
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://isaiflow.in'
 
-  // Fetch top stations for inclusion in sitemap
-  const stations = await getTamilStations({ limit: 100 })
+  const stations = await getTamilStations({ limit: 100 }).catch((error: unknown) => {
+    console.error('Failed to load stations for sitemap', error)
+    return []
+  })
 
   const stationUrls = stations.map(station => ({
     url: `${baseUrl}/station/${station.stationuuid}-${createSlug(station.name)}`,
