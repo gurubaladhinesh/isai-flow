@@ -1,16 +1,23 @@
 import { getStationById } from "@/src/lib/radio-api";
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { PlayCircle, Radio, MapPin, Signal, Headphones } from "lucide-react";
+import { Radio, MapPin, Signal, Headphones } from "lucide-react";
 import { Breadcrumb } from "@/src/components/Breadcrumb";
-import { createSlug } from "@/src/lib/slug";
+import { StationPlayControls } from "@/src/components/StationPlayControls";
+import { extractStationId, getStationUrl } from "@/src/lib/slug";
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }> | { id: string };
+}
+
+async function resolveParams(params: PageProps["params"]) {
+  return await Promise.resolve(params);
 }
 
 export async function generateMetadata({ params }: PageProps) {
-  const station = await getStationById(params.id);
+  const resolved = await resolveParams(params);
+  const stationId = extractStationId(resolved.id);
+  const station = await getStationById(stationId);
 
   if (!station) {
     return {
@@ -20,18 +27,28 @@ export async function generateMetadata({ params }: PageProps) {
   }
 
   const baseTitle = station.name || "Tamil Radio Station";
-  const location = station.state ? `${station.state}, ${station.country}` : station.country;
+  const location = station.state
+    ? `${station.state}, ${station.country}`
+    : station.country;
   const bitrateInfo = station.bitrate ? `${station.bitrate} kbps` : "High quality";
+  const path = getStationUrl(station);
 
   return {
     title: `${baseTitle} - Listen Live | Isai Flow Tamil Radio`,
-    description: `Listen to ${baseTitle} live on Isai Flow. ${location}. ${bitrateInfo} streaming. ${station.tags ? station.tags : 'Tamil music and entertainment'}.`,
-    keywords: [station.name, "Tamil Radio", station.country, station.language, "Live FM", ...(station.tags ? station.tags.split(",") : [])],
+    description: `Listen to ${baseTitle} live on Isai Flow. ${location}. ${bitrateInfo} streaming. ${station.tags ? station.tags : "Tamil music and entertainment"}.`,
+    keywords: [
+      station.name,
+      "Tamil Radio",
+      station.country,
+      station.language,
+      "Live FM",
+      ...(station.tags ? station.tags.split(",") : []),
+    ],
     openGraph: {
       title: `${baseTitle} - Listen Live on Isai Flow`,
       description: `Stream ${baseTitle} live. ${location}. ${bitrateInfo} audio quality.`,
       type: "website",
-      url: `https://isaiflow.in/station/${params.id}-${createSlug(station.name)}`,
+      url: `https://isaiflow.in${path}`,
       images: station.favicon ? [{ url: station.favicon }] : [],
       locale: "ta_IN",
       siteName: "Isai Flow",
@@ -42,17 +59,26 @@ export async function generateMetadata({ params }: PageProps) {
       description: `Listen to ${baseTitle} streaming on Isai Flow`,
     },
     alternates: {
-      canonical: `https://isaiflow.in/station/${params.id}-${createSlug(station.name)}`,
+      canonical: `https://isaiflow.in${path}`,
     },
   };
 }
 
 export default async function StationPage({ params }: PageProps) {
-  const station = await getStationById(params.id);
+  const resolved = await resolveParams(params);
+  const stationId = extractStationId(resolved.id);
+  const station = await getStationById(stationId);
 
   if (!station) {
     notFound();
   }
+
+  const tags = station.tags
+    ? station.tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean)
+    : [];
 
   const breadcrumbItems = [
     { label: "Home", href: "/" },
@@ -64,87 +90,129 @@ export default async function StationPage({ params }: PageProps) {
     <div className="flex h-full flex-1 flex-col gap-6">
       <Breadcrumb items={breadcrumbItems} />
 
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex flex-col gap-4 sm:flex-row">
-          <div className="relative aspect-square w-24 overflow-hidden rounded-xl bg-gradient-to-br from-zinc-800 via-zinc-900 to-black sm:w-32">
+      <section className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[rgba(18,26,23,0.65)]">
+        <div className="pointer-events-none absolute inset-0 bg-mesh opacity-30" />
+        <div className="relative flex flex-col gap-6 p-5 sm:flex-row sm:items-end sm:p-8">
+          <div className="relative mx-auto aspect-square w-full max-w-[280px] overflow-hidden rounded-3xl bg-[#15201c] shadow-2xl sm:mx-0 sm:w-56 sm:max-w-none md:w-64">
             {station.favicon ? (
               <Image
                 src={station.favicon}
                 alt={station.name}
                 fill
-                sizes="128px"
+                sizes="280px"
                 className="object-cover"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-900/20 to-fuchsia-900/20">
-                <Radio className="h-8 w-8 text-violet-400" />
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[var(--accent-deep)]/40 to-[var(--warm)]/20">
+                <Radio className="h-12 w-12 text-[var(--accent-bright)]" />
               </div>
             )}
           </div>
 
-          <div>
-            <h1 className="bg-gradient-to-r from-white via-violet-200 to-fuchsia-300 bg-clip-text text-2xl font-bold tracking-tight text-transparent sm:text-3xl">
-              {station.name}
-            </h1>
+          <div className="min-w-0 flex-1 space-y-4">
+            <div>
+              <p className="mb-2 text-xs uppercase tracking-[0.2em] text-[var(--warm)]">
+                Live station
+              </p>
+              <h1 className="font-display text-3xl font-semibold tracking-tight text-brand-gradient sm:text-4xl">
+                {station.name}
+              </h1>
+            </div>
 
-            <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-zinc-300">
+            <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--muted)]">
               {station.country && (
-                <div className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4 text-violet-400" />
-                  <span>{station.state ? `${station.state}, ${station.country}` : station.country}</span>
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="h-4 w-4 text-[var(--accent-bright)]" />
+                  <span>
+                    {station.state
+                      ? `${station.state}, ${station.country}`
+                      : station.country}
+                  </span>
                 </div>
               )}
 
               {station.bitrate > 0 && (
-                <div className="flex items-center gap-1">
-                  <Signal className="h-4 w-4 text-fuchsia-400" />
+                <div className="flex items-center gap-1.5">
+                  <Signal className="h-4 w-4 text-[var(--warm)]" />
                   <span>{station.bitrate} kbps</span>
                 </div>
               )}
 
-              <div className="flex items-center gap-1">
-                <Headphones className="h-4 w-4 text-emerald-400" />
-                <span>{station.clickcount} listeners</span>
+              <div className="flex items-center gap-1.5">
+                <Headphones className="h-4 w-4 text-[var(--accent-bright)]" />
+                <span>{station.clickcount.toLocaleString()} listeners</span>
               </div>
             </div>
 
-            {station.tags && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {station.tags.split(",").map((tag, index) => (
+            {tags.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {tags.map((tag) => (
                   <span
-                    key={index}
-                    className="rounded-full bg-violet-900/30 px-2 py-1 text-xs text-violet-200"
+                    key={tag}
+                    className="rounded-full border border-[var(--border)] bg-white/[0.04] px-2.5 py-1 text-xs text-[var(--muted)]"
                   >
-                    {tag.trim()}
+                    {tag}
                   </span>
                 ))}
               </div>
-            )}
+            ) : null}
+
+            <StationPlayControls station={station} />
           </div>
         </div>
+      </section>
 
-        <StationPlayButton station={station} />
-      </header>
-
-      <section className="mt-4 border-t border-white/10 pt-6">
-        <h2 className="text-lg font-semibold text-white">About this Station</h2>
-        <p className="mt-2 text-sm text-zinc-400">
-          {station.name} is a Tamil radio station broadcasting from {station.country}.
-          Enjoy high-quality Tamil music, news, and entertainment with {station.bitrate} kbps streaming.
+      <section className="rounded-3xl border border-[var(--border)] bg-white/[0.02] p-5 sm:p-6">
+        <h2 className="font-display text-lg font-semibold text-[var(--text)]">
+          About this station
+        </h2>
+        <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-[var(--muted)]">
+              Language
+            </dt>
+            <dd className="mt-1 text-sm text-[var(--text)]">
+              {station.language || "Tamil"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-[var(--muted)]">
+              Location
+            </dt>
+            <dd className="mt-1 text-sm text-[var(--text)]">
+              {station.state
+                ? `${station.state}, ${station.country}`
+                : station.country || "Worldwide"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-[var(--muted)]">
+              Audio quality
+            </dt>
+            <dd className="mt-1 text-sm text-[var(--text)]">
+              {station.bitrate > 0
+                ? `${station.bitrate} kbps stream`
+                : "Variable bitrate"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-[var(--muted)]">
+              Tags
+            </dt>
+            <dd className="mt-1 text-sm text-[var(--text)]">
+              {tags.length > 0 ? tags.join(" · ") : "Tamil radio"}
+            </dd>
+          </div>
+        </dl>
+        <p className="mt-5 text-sm leading-relaxed text-[var(--muted)]">
+          Tune into {station.name} on Isai Flow for live Tamil programming.
+          {tags.length > 0
+            ? ` Known for ${tags.slice(0, 3).join(", ")}.`
+            : ""}{" "}
+          Use Play to start streaming in the persistent player, or Favorite to
+          keep it in your library.
         </p>
       </section>
     </div>
-  );
-}
-
-function StationPlayButton({ station }: { station: any }) {
-  return (
-    <button
-      type="button"
-      className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-violet-500/30 ring-1 ring-violet-300/70 transition hover:brightness-110 hover:shadow-violet-400/50"
-    >
-      <PlayCircle className="h-5 w-5" />
-      <span>Play Station</span>
-    </button>
   );
 }

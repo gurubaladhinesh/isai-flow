@@ -2,11 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { PlayCircle } from "lucide-react";
+import { Heart, PlayCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { Station } from "@/src/lib/radio-api";
 import { usePlayer } from "@/src/context/PlayerContext";
-import { createSlug } from "@/src/lib/slug";
+import { getStationUrl } from "@/src/lib/slug";
 
 interface StationGridProps {
   stations: Station[];
@@ -24,6 +24,8 @@ function StationTile({
   onPlay: () => void;
 }) {
   const [logoOk, setLogoOk] = useState(true);
+  const { toggleFavorite, isFavorite } = usePlayer();
+  const favorited = isFavorite(station.stationuuid);
 
   const logoSrc = useMemo(() => {
     const candidate = station.favicon?.trim();
@@ -33,66 +35,74 @@ function StationTile({
   }, [station.favicon, logoOk]);
 
   return (
-    <Link
-      href={`/station/${station.stationuuid}-${createSlug(station.name)}`}
-      style={{ cursor: 'pointer' } as React.CSSProperties}
-      className="station-tile group relative flex cursor-pointer flex-col overflow-hidden rounded-lg border border-white/5 bg-gradient-to-br from-white/5 via-white/2 to-black/40 p-2 text-left text-xs text-white shadow-md transition-all duration-300 hover:scale-[1.02] hover:border-violet-500/80 hover:shadow-lg hover:shadow-violet-500/15"
-    >
-      <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-md bg-zinc-900">
+    <div className="station-tile group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[rgba(255,255,255,0.03)] p-2.5 text-left text-xs text-[var(--text)] transition duration-300 hover:border-[var(--accent)]/50 hover:bg-[rgba(47,158,138,0.08)]">
+      <Link
+        href={getStationUrl(station)}
+        className="absolute inset-0 z-0"
+        aria-label={`Open ${station.name}`}
+      />
+
+      <div className="relative z-10 mb-2.5 aspect-square w-full overflow-hidden rounded-xl bg-[#15201c]">
         <Image
           src={logoSrc}
           alt={station.name || "Station"}
           fill
-          sizes="96px"
-          className="object-cover transition duration-300 group-hover:scale-105 group-hover:brightness-110"
+          sizes="120px"
+          className="object-cover transition duration-300 group-hover:scale-105"
           onError={() => setLogoOk(false)}
         />
 
         <button
           type="button"
-          className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 backdrop-blur-sm transition group-hover:opacity-100"
+          className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 backdrop-blur-[2px] transition group-hover:opacity-100"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
             onPlay();
           }}
-        />
+          aria-label={`Play ${station.name}`}
+        >
+          <PlayCircle className="h-10 w-10 text-[var(--accent-bright)] drop-shadow-lg" />
+        </button>
 
         <button
           type="button"
-          className="absolute bottom-1.5 right-1.5 opacity-0 drop-shadow-lg transition group-hover:opacity-100"
+          className={`absolute right-1.5 top-1.5 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-black/55 backdrop-blur transition hover:scale-105 ${
+            favorited ? "text-[var(--warm)]" : "text-white/80 opacity-0 group-hover:opacity-100"
+          }`}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            onPlay();
+            toggleFavorite(station);
           }}
+          aria-label={favorited ? "Remove favorite" : "Add favorite"}
         >
-          <PlayCircle className="h-7 w-7 text-violet-300" />
+          <Heart className={`h-3.5 w-3.5 ${favorited ? "fill-current" : ""}`} />
         </button>
 
         {isCurrent && isPlaying ? (
-          <div className="absolute left-1.5 top-1.5 rounded-full bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-emerald-300 backdrop-blur">
+          <div className="absolute left-1.5 top-1.5 rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-medium text-[var(--accent-bright)] backdrop-blur">
             Live
           </div>
         ) : null}
       </div>
 
-      <div className="space-y-0.5">
-        <div className="line-clamp-1 text-[12px] font-semibold">
+      <div className="relative z-10 space-y-0.5 px-0.5">
+        <div className="line-clamp-1 font-display text-[13px] font-semibold">
           {station.name || "Untitled Station"}
         </div>
-        <div className="flex items-center justify-between text-[10px] text-zinc-400">
+        <div className="flex items-center justify-between text-[10px] text-[var(--muted)]">
           <span className="line-clamp-1">
             {station.state || station.country || "Tamil"}
           </span>
           {station.bitrate ? (
-            <span className="ml-2 rounded-full border border-white/10 px-1.5 py-0.5 text-[10px]">
+            <span className="ml-2 rounded-md border border-white/10 px-1.5 py-0.5 text-[10px]">
               {station.bitrate}
             </span>
           ) : null}
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 
@@ -101,14 +111,14 @@ export function StationGrid({ stations }: StationGridProps) {
 
   if (stations.length === 0) {
     return (
-      <div className="flex h-full flex-1 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/5/5 text-sm text-zinc-400">
-        No stations found right now. Please try again later.
+      <div className="flex h-40 flex-1 items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-white/[0.02] text-sm text-[var(--muted)]">
+        No stations match your search. Try another name or tag.
       </div>
     );
   }
 
   return (
-    <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
       {stations.map((station) => {
         const isCurrent = currentStation?.stationuuid === station.stationuuid;
 
@@ -125,4 +135,3 @@ export function StationGrid({ stations }: StationGridProps) {
     </div>
   );
 }
-

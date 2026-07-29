@@ -1,27 +1,29 @@
 export default function Loading() {
-  const items = Array.from({ length: 10 });
+  const items = Array.from({ length: 12 });
 
   return (
-    <div className="flex h-full flex-1 flex-col gap-6">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="h-6 w-40 rounded-full bg-white/10 sm:h-8" />
-          <div className="mt-2 h-3 w-56 rounded-full bg-white/5 sm:w-72" />
-        </div>
+    <div className="flex h-full flex-1 flex-col gap-8">
+      <header className="overflow-hidden rounded-3xl border border-[var(--border)] bg-white/[0.03] px-5 py-8 sm:px-8 sm:py-10">
+        <div className="h-4 w-28 animate-pulse rounded-full bg-white/10" />
+        <div className="mt-4 h-10 w-72 max-w-full animate-pulse rounded-2xl bg-white/10 sm:h-12 sm:w-[28rem]" />
+        <div className="mt-3 h-4 w-56 max-w-full animate-pulse rounded-full bg-white/5 sm:w-80" />
       </header>
 
-      <section className="flex-1 overflow-auto pb-6">
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
+      <div className="h-12 w-full animate-pulse rounded-2xl bg-white/5" />
+
+      <section className="flex-1 pb-6">
+        <div className="mb-3 h-5 w-32 animate-pulse rounded-full bg-white/10" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
           {items.map((_, index) => (
             <div
               key={index}
-              className="flex flex-col rounded-lg border border-white/5 bg-white/5/5 p-2"
+              className="flex flex-col rounded-2xl border border-[var(--border)] bg-white/[0.03] p-2.5"
             >
-              <div className="mb-2 aspect-square w-full rounded-md bg-gradient-to-br from-zinc-800 via-zinc-900 to-black" />
-              <div className="h-3 w-32 rounded-full bg-white/10" />
+              <div className="mb-2.5 aspect-square w-full animate-pulse rounded-xl bg-[#15201c]" />
+              <div className="h-3 w-24 animate-pulse rounded-full bg-white/10" />
               <div className="mt-2 flex items-center justify-between">
-                <div className="h-2 w-20 rounded-full bg-white/5" />
-                <div className="h-4 w-10 rounded-full bg-white/5" />
+                <div className="h-2 w-16 animate-pulse rounded-full bg-white/5" />
+                <div className="h-4 w-8 animate-pulse rounded-md bg-white/5" />
               </div>
             </div>
           ))}
@@ -30,4 +32,3 @@ export default function Loading() {
     </div>
   );
 }
-
