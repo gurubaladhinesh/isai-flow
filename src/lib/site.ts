@@ -1,4 +1,4 @@
-export const SITE_URL = "https://isaiflow.in";
+export const SITE_URL = "https://www.isaiflow.in";
 export const SITE_NAME = "Isai Flow";
 
 export const POPULAR_GENRES = [
