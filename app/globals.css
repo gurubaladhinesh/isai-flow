@@ -103,6 +103,15 @@
     cursor: pointer !important;
   }
 
+  .station-tile-virtualized {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 180px;
+  }
+
+  .section-heading {
+    contain: layout paint style;
+  }
+
   .text-brand-gradient {
     background: linear-gradient(120deg, #f7f2e8 10%, #d4a574 45%, #3ecfb4 100%);
     -webkit-background-clip: text;

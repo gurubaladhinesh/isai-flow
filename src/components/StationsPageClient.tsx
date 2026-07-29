@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  startTransition,
   useCallback,
   useDeferredValue,
   useEffect,
@@ -12,8 +13,13 @@ import { useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
 import type { Station } from "@/src/lib/radio-api";
 import { StationGrid } from "@/src/components/StationGrid";
-import { StationGridSkeleton } from "@/src/components/StationGridSkeleton";
 import { usePlayer } from "@/src/context/PlayerContext";
+import {
+  fetchStationPage,
+  mergeStations,
+  prefetchStationPage,
+  seedStationPage,
+} from "@/src/lib/station-page-cache";
 import {
   clearHomeScrollState,
   readHomeScrollState,
@@ -28,6 +34,9 @@ interface StationsPageClientProps {
   pageSize?: number;
 }
 
+const PREFETCH_ROOT_MARGIN = "300% 0px 300% 0px";
+const SKELETON_COUNT = 12;
+
 function SectionHeading({
   id,
   title,
@@ -40,7 +49,7 @@ function SectionHeading({
   return (
     <div
       id={id}
-      className="sticky top-0 z-20 -mx-1 scroll-mt-4 border-b border-transparent bg-[rgba(11,18,16,0.82)] px-1 py-2.5 backdrop-blur-xl supports-[backdrop-filter]:bg-[rgba(11,18,16,0.72)]"
+      className="section-heading sticky top-0 z-20 -mx-1 scroll-mt-4 border-b border-[var(--border)]/40 bg-[#0b1210]/95 px-1 py-2.5"
     >
       <h2 className="font-display text-lg font-semibold">{title}</h2>
       <p className="text-sm text-[var(--muted)]">{description}</p>
@@ -51,7 +60,7 @@ function SectionHeading({
 export function StationsPageClient({
   initialStations,
   initialOffset,
-  pageSize = 32,
+  pageSize = 48,
 }: StationsPageClientProps) {
   const [stations, setStations] = useState<Station[]>(initialStations);
   const [offset, setOffset] = useState(initialOffset);
@@ -60,10 +69,12 @@ export function StationsPageClient({
   const [query, setQuery] = useState("");
   const [loadError, setLoadError] = useState<string | null>(null);
   const deferredQuery = useDeferredValue(query.trim().toLowerCase());
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const loadTriggerRef = useRef<HTMLDivElement | null>(null);
   const catalogRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef(false);
   const restoredRef = useRef(false);
+  const offsetRef = useRef(initialOffset);
+  const hasMoreRef = useRef(true);
   const stateRef = useRef({
     stations: initialStations,
     offset: initialOffset,
@@ -73,7 +84,18 @@ export function StationsPageClient({
   const searchParams = useSearchParams();
   const { favoriteStations, recentStations } = usePlayer();
 
+  offsetRef.current = offset;
+  hasMoreRef.current = hasMore;
   stateRef.current = { stations, offset, hasMore, query };
+
+  const queuePrefetch = useCallback(
+    (fromOffset: number) => {
+      if (!hasMoreRef.current) return;
+      prefetchStationPage(fromOffset, pageSize);
+      prefetchStationPage(fromOffset + pageSize, pageSize);
+    },
+    [pageSize],
+  );
 
   const persistScrollState = useCallback(() => {
     const current = stateRef.current;
@@ -93,8 +115,6 @@ export function StationsPageClient({
     }
   }, [searchParams]);
 
-  // Restore catalog + scroll position when returning from a station page.
-  // Prefer explicit hash anchors over restored scroll when present.
   useEffect(() => {
     if (restoredRef.current) return;
     restoredRef.current = true;
@@ -113,18 +133,18 @@ export function StationsPageClient({
 
     setStations(saved.stations);
     setOffset(saved.offset);
+    offsetRef.current = saved.offset;
     setHasMore(saved.hasMore);
+    hasMoreRef.current = saved.hasMore;
     if (saved.query) setQuery(saved.query);
 
-    const targetY = saved.scrollY;
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        smoothScrollTo(targetY, "auto");
+        smoothScrollTo(saved.scrollY, "auto");
       });
     });
   }, []);
 
-  // Persist scroll state while browsing and before leaving the page.
   useEffect(() => {
     const onVisibility = () => {
       if (document.visibilityState === "hidden") persistScrollState();
@@ -134,17 +154,13 @@ export function StationsPageClient({
     window.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("pagehide", onPageHide);
 
-    const interval = window.setInterval(persistScrollState, 1500);
-
     return () => {
       persistScrollState();
       window.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("pagehide", onPageHide);
-      window.clearInterval(interval);
     };
   }, [persistScrollState]);
 
-  // Bring results into view when searching.
   useEffect(() => {
     if (!deferredQuery) return;
     const catalog = catalogRef.current;
@@ -155,39 +171,34 @@ export function StationsPageClient({
     return () => cancelAnimationFrame(frame);
   }, [deferredQuery]);
 
+  const appendStations = useCallback((incoming: Station[]) => {
+    startTransition(() => {
+      setStations((prev) => mergeStations(prev, incoming));
+    });
+  }, []);
+
   const loadMore = useCallback(async () => {
-    if (loadingRef.current || !hasMore) return;
+    if (loadingRef.current || !hasMoreRef.current) return;
+
     loadingRef.current = true;
     setIsLoading(true);
     setLoadError(null);
 
-    try {
-      const params = new URLSearchParams({
-        offset: String(offset),
-        limit: String(pageSize),
-      });
-      const response = await fetch(`/api/stations?${params.toString()}`);
-      if (!response.ok) {
-        throw new Error("Failed to load more stations");
-      }
-      const json = (await response.json()) as { stations: Station[] };
-      const next = json.stations ?? [];
+    const requestOffset = offsetRef.current;
 
-      setStations((prev) => {
-        const map = new Map<string, Station>();
-        for (const s of prev) {
-          map.set(s.stationuuid, s);
-        }
-        for (const s of next) {
-          if (!map.has(s.stationuuid)) {
-            map.set(s.stationuuid, s);
-          }
-        }
-        return Array.from(map.values());
-      });
-      setOffset((prev) => prev + next.length);
+    try {
+      const next = await fetchStationPage(requestOffset, pageSize);
+
+      appendStations(next);
+      const nextOffset = requestOffset + next.length;
+      offsetRef.current = nextOffset;
+      setOffset(nextOffset);
+
       if (next.length === 0) {
+        hasMoreRef.current = false;
         setHasMore(false);
+      } else {
+        queuePrefetch(nextOffset);
       }
     } catch (error) {
       console.error(error);
@@ -196,12 +207,22 @@ export function StationsPageClient({
       loadingRef.current = false;
       setIsLoading(false);
     }
-  }, [hasMore, offset, pageSize]);
+  }, [appendStations, pageSize, queuePrefetch]);
+
+  const handleLoadTrigger = useCallback((node: HTMLDivElement | null) => {
+    loadTriggerRef.current = node;
+  }, []);
+
+  // Seed client cache with SSR data and warm upcoming pages immediately.
+  useEffect(() => {
+    seedStationPage(0, pageSize, initialStations);
+    queuePrefetch(initialOffset);
+  }, [initialOffset, initialStations, pageSize, queuePrefetch]);
 
   useEffect(() => {
     if (!hasMore || deferredQuery) return;
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
+    const trigger = loadTriggerRef.current;
+    if (!trigger) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -212,16 +233,13 @@ export function StationsPageClient({
       },
       {
         root: null,
-        // Prefetch ~1–1.5 viewports ahead for continuous scrolling.
-        rootMargin: "1200px 0px",
+        rootMargin: PREFETCH_ROOT_MARGIN,
         threshold: 0,
       },
     );
 
-    observer.observe(sentinel);
-    return () => {
-      observer.disconnect();
-    };
+    observer.observe(trigger);
+    return () => observer.disconnect();
   }, [hasMore, deferredQuery, loadMore, stations.length]);
 
   const filteredStations = useMemo(() => {
@@ -245,6 +263,18 @@ export function StationsPageClient({
     () => [...stations].sort((a, b) => b.clickcount - a.clickcount).slice(0, 8),
     [stations],
   );
+
+  const popularIds = useMemo(
+    () => new Set(popularStations.map((station) => station.stationuuid)),
+    [popularStations],
+  );
+
+  const catalogStations = useMemo(() => {
+    if (deferredQuery) return filteredStations;
+    return stations.filter((station) => !popularIds.has(station.stationuuid));
+  }, [deferredQuery, filteredStations, popularIds, stations]);
+
+  const loadTriggerIndex = Math.max(0, catalogStations.length - 12);
 
   const handleClearSearch = () => {
     setQuery("");
@@ -282,7 +312,7 @@ export function StationsPageClient({
             title="Favorites"
             description="Your saved Tamil stations, ready to resume."
           />
-          <StationGrid stations={favoriteStations} />
+          <StationGrid stations={favoriteStations} priorityCount={4} />
         </section>
       ) : null}
 
@@ -293,7 +323,7 @@ export function StationsPageClient({
             title="Recently played"
             description="Pick up where you left off."
           />
-          <StationGrid stations={recentStations} />
+          <StationGrid stations={recentStations} priorityCount={4} />
         </section>
       ) : null}
 
@@ -304,7 +334,7 @@ export function StationsPageClient({
             title="Popular now"
             description="Most listened Tamil streams from the catalogue."
           />
-          <StationGrid stations={popularStations} />
+          <StationGrid stations={popularStations} priorityCount={8} />
         </section>
       ) : null}
 
@@ -318,26 +348,32 @@ export function StationsPageClient({
               : "Handpicked Tamil radio streams from around the world."
           }
         />
-        <StationGrid stations={filteredStations} />
+        <StationGrid
+          stations={catalogStations}
+          loadingCount={!deferredQuery && isLoading ? SKELETON_COUNT : 0}
+          priorityCount={8}
+          loadTriggerIndex={
+            !deferredQuery && catalogStations.length > 0
+              ? loadTriggerIndex
+              : undefined
+          }
+          onLoadTrigger={!deferredQuery ? handleLoadTrigger : undefined}
+        />
       </section>
 
-      {!deferredQuery ? (
-        <div ref={sentinelRef} className="min-h-10 w-full space-y-4 pb-2">
-          {isLoading ? <StationGridSkeleton count={8} /> : null}
-          {loadError ? (
-            <button
-              type="button"
-              onClick={() => void loadMore()}
-              className="mx-auto flex text-[11px] text-[var(--warm)] underline-offset-2 hover:underline"
-            >
-              {loadError}
-            </button>
-          ) : null}
-          {!hasMore && stations.length > 0 && !loadError ? (
-            <div className="flex items-center justify-center text-[11px] text-[var(--muted)]">
-              You’ve reached the end of the list.
-            </div>
-          ) : null}
+      {!deferredQuery && loadError ? (
+        <button
+          type="button"
+          onClick={() => void loadMore()}
+          className="mx-auto flex text-[11px] text-[var(--warm)] underline-offset-2 hover:underline"
+        >
+          {loadError}
+        </button>
+      ) : null}
+
+      {!deferredQuery && !hasMore && stations.length > 0 && !loadError ? (
+        <div className="flex items-center justify-center pb-2 text-[11px] text-[var(--muted)]">
+          You’ve reached the end of the list.
         </div>
       ) : null}
     </div>
