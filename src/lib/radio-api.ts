@@ -41,7 +41,7 @@ export async function getTamilStations(
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      "User-Agent": "isai-flow/1.0 (https://isaiflow.in)",
+      "User-Agent": "isai-flow/1.0 (https://www.isaiflow.in)",
     },
     signal: options.signal,
     next: { revalidate: 3600 },
@@ -107,7 +107,7 @@ export async function getStationsByTag(
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      "User-Agent": "isai-flow/1.0 (https://isaiflow.in)",
+      "User-Agent": "isai-flow/1.0 (https://www.isaiflow.in)",
     },
     signal: options.signal,
     next: { revalidate: 3600 },
@@ -146,7 +146,7 @@ export async function getStationsByLocation(
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      "User-Agent": "isai-flow/1.0 (https://isaiflow.in)",
+      "User-Agent": "isai-flow/1.0 (https://www.isaiflow.in)",
     },
     signal: options.signal,
     next: { revalidate: 3600 },
@@ -206,7 +206,7 @@ export async function getStationById(uuid: string): Promise<Station | null> {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "User-Agent": "isai-flow/1.0 (https://isaiflow.in)",
+        "User-Agent": "isai-flow/1.0 (https://www.isaiflow.in)",
       },
       next: { revalidate: 3600 }, // Revalidate every hour
     });
