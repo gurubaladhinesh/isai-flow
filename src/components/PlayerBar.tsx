@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Pause, Play, Volume2, VolumeX } from "lucide-react";
 import { usePlayer } from "@/src/context/PlayerContext";
 import { getStationUrl } from "@/src/lib/slug";
+import { StationArtworkThumb } from "@/src/components/StationArtwork";
 import { useState } from "react";
 
 function Equalizer({ active }: { active: boolean }) {
@@ -70,14 +71,9 @@ export function PlayerBar() {
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-[#1a2420] ring-1 ring-white/10">
             {currentStation ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={currentStation.favicon || "/station-default.svg"}
-                alt=""
-                className="h-full w-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = "/station-default.svg";
-                }}
+              <StationArtworkThumb
+                src={currentStation.favicon}
+                alt={currentStation.name || "Station artwork"}
               />
             ) : (
               <div

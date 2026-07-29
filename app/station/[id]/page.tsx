@@ -1,9 +1,9 @@
 import { getStationById } from "@/src/lib/radio-api";
 import { notFound } from "next/navigation";
-import Image from "next/image";
-import { Radio, MapPin, Signal, Headphones } from "lucide-react";
+import { MapPin, Signal, Headphones } from "lucide-react";
 import { Breadcrumb } from "@/src/components/Breadcrumb";
 import { StationPlayControls } from "@/src/components/StationPlayControls";
+import { StationArtwork } from "@/src/components/StationArtwork";
 import { extractStationId, getStationUrl } from "@/src/lib/slug";
 
 interface PageProps {
@@ -94,19 +94,13 @@ export default async function StationPage({ params }: PageProps) {
         <div className="pointer-events-none absolute inset-0 bg-mesh opacity-30" />
         <div className="relative flex flex-col gap-6 p-5 sm:flex-row sm:items-end sm:p-8">
           <div className="relative mx-auto aspect-square w-full max-w-[280px] overflow-hidden rounded-3xl bg-[#15201c] shadow-2xl sm:mx-0 sm:w-56 sm:max-w-none md:w-64">
-            {station.favicon ? (
-              <Image
-                src={station.favicon}
-                alt={station.name}
-                fill
-                sizes="280px"
-                className="object-cover"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[var(--accent-deep)]/40 to-[var(--warm)]/20">
-                <Radio className="h-12 w-12 text-[var(--accent-bright)]" />
-              </div>
-            )}
+            <StationArtwork
+              src={station.favicon}
+              alt={station.name}
+              sizes="280px"
+              className="object-cover"
+              priority
+            />
           </div>
 
           <div className="min-w-0 flex-1 space-y-4">

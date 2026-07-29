@@ -1,12 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Heart, PlayCircle } from "lucide-react";
-import { useMemo, useState } from "react";
 import type { Station } from "@/src/lib/radio-api";
 import { usePlayer } from "@/src/context/PlayerContext";
 import { getStationUrl } from "@/src/lib/slug";
+import { StationArtwork } from "@/src/components/StationArtwork";
 
 interface StationGridProps {
   stations: Station[];
@@ -23,16 +22,8 @@ function StationTile({
   isPlaying: boolean;
   onPlay: () => void;
 }) {
-  const [logoOk, setLogoOk] = useState(true);
   const { toggleFavorite, isFavorite } = usePlayer();
   const favorited = isFavorite(station.stationuuid);
-
-  const logoSrc = useMemo(() => {
-    const candidate = station.favicon?.trim();
-    if (!candidate) return "/station-default.svg";
-    if (!logoOk) return "/station-default.svg";
-    return candidate;
-  }, [station.favicon, logoOk]);
 
   return (
     <div className="station-tile group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[rgba(255,255,255,0.03)] p-2.5 text-left text-xs text-[var(--text)] transition duration-300 hover:border-[var(--accent)]/50 hover:bg-[rgba(47,158,138,0.08)]">
@@ -43,13 +34,11 @@ function StationTile({
       />
 
       <div className="relative z-10 mb-2.5 aspect-square w-full overflow-hidden rounded-xl bg-[#15201c]">
-        <Image
-          src={logoSrc}
+        <StationArtwork
+          src={station.favicon}
           alt={station.name || "Station"}
-          fill
           sizes="120px"
           className="object-cover transition duration-300 group-hover:scale-105"
-          onError={() => setLogoOk(false)}
         />
 
         <button
