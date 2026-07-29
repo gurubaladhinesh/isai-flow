@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Clock, Heart, Library } from "lucide-react";
 import { usePlayer } from "@/src/context/PlayerContext";
 import { getStationUrl } from "@/src/lib/slug";
+import { smoothScrollIntoView } from "@/src/lib/scroll";
 import type { Station } from "@/src/lib/radio-api";
 
 function StationListItem({
@@ -42,6 +43,11 @@ function StationListItem({
   );
 }
 
+function scrollToSection(id: string) {
+  const el = document.getElementById(id);
+  if (el) smoothScrollIntoView(el, "start");
+}
+
 export function Sidebar() {
   const pathname = usePathname();
   const {
@@ -73,24 +79,41 @@ export function Sidebar() {
       </Link>
 
       <nav className="space-y-1 px-0.5">
-        <Link
-          href="/"
-          className={`flex min-h-10 w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium transition ${
-            isHome
-              ? "bg-[var(--accent)]/15 text-[var(--accent-bright)]"
-              : "text-[var(--muted)] hover:bg-white/5 hover:text-[var(--text)]"
-          }`}
-        >
-          <Library className="h-4 w-4" />
-          <span>All Stations</span>
-        </Link>
+        {isHome ? (
+          <button
+            type="button"
+            onClick={() => scrollToSection("all-stations")}
+            className="flex min-h-10 w-full items-center gap-2 rounded-lg bg-[var(--accent)]/15 px-2.5 py-2 text-sm font-medium text-[var(--accent-bright)] transition"
+          >
+            <Library className="h-4 w-4" />
+            <span>All Stations</span>
+          </button>
+        ) : (
+          <Link
+            href="/#all-stations"
+            className="flex min-h-10 w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-[var(--muted)] transition hover:bg-white/5 hover:text-[var(--text)]"
+          >
+            <Library className="h-4 w-4" />
+            <span>All Stations</span>
+          </Link>
+        )}
       </nav>
 
       <div className="mt-8 flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
         <Heart className="h-3.5 w-3.5" />
-        <span>Favorites</span>
+        {isHome ? (
+          <button
+            type="button"
+            onClick={() => scrollToSection("favorites")}
+            className="hover:text-[var(--text)]"
+          >
+            Favorites
+          </button>
+        ) : (
+          <span>Favorites</span>
+        )}
       </div>
-      <div className="mt-2 max-h-40 space-y-0.5 overflow-y-auto pr-1">
+      <div className="scroll-fade-y mt-2 max-h-40 space-y-0.5 pr-1">
         {favoriteStations.length === 0 ? (
           <div className="rounded-lg px-2.5 py-2 text-[11px] text-[var(--muted)]">
             Heart a station to save it here.
@@ -109,9 +132,19 @@ export function Sidebar() {
 
       <div className="mt-6 flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
         <Clock className="h-3.5 w-3.5" />
-        <span>Recent</span>
+        {isHome ? (
+          <button
+            type="button"
+            onClick={() => scrollToSection("recent")}
+            className="hover:text-[var(--text)]"
+          >
+            Recent
+          </button>
+        ) : (
+          <span>Recent</span>
+        )}
       </div>
-      <div className="mt-2 flex-1 space-y-0.5 overflow-y-auto pr-1">
+      <div className="scroll-fade-y mt-2 min-h-0 flex-1 space-y-0.5 pr-1">
         {recentStations.length === 0 ? (
           <div className="rounded-lg px-2.5 py-2 text-[11px] text-[var(--muted)]">
             Stations you play will appear here.

@@ -96,7 +96,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
             <Sidebar />
             <main className="relative flex-1">
               <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden bg-mesh opacity-60" />
-              <div className="flex w-full flex-col gap-6 px-4 pb-4 pt-5 sm:px-6 sm:pt-7">
+              <div className="flex w-full flex-col gap-6 px-4 pb-8 pt-5 sm:px-6 sm:pb-10 sm:pt-7">
                 <div className="flex items-center justify-between md:hidden">
                   <div className="flex items-center gap-3">
                     <div

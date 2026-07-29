@@ -1,16 +1,51 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
 import type { Station } from "@/src/lib/radio-api";
 import { StationGrid } from "@/src/components/StationGrid";
+import { StationGridSkeleton } from "@/src/components/StationGridSkeleton";
 import { usePlayer } from "@/src/context/PlayerContext";
+import {
+  clearHomeScrollState,
+  readHomeScrollState,
+  saveHomeScrollState,
+  smoothScrollIntoView,
+  smoothScrollTo,
+} from "@/src/lib/scroll";
 
 interface StationsPageClientProps {
   initialStations: Station[];
   initialOffset: number;
   pageSize?: number;
+}
+
+function SectionHeading({
+  id,
+  title,
+  description,
+}: {
+  id: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div
+      id={id}
+      className="sticky top-0 z-20 -mx-1 scroll-mt-4 border-b border-transparent bg-[rgba(11,18,16,0.82)] px-1 py-2.5 backdrop-blur-xl supports-[backdrop-filter]:bg-[rgba(11,18,16,0.72)]"
+    >
+      <h2 className="font-display text-lg font-semibold">{title}</h2>
+      <p className="text-sm text-[var(--muted)]">{description}</p>
+    </div>
+  );
 }
 
 export function StationsPageClient({
@@ -26,8 +61,30 @@ export function StationsPageClient({
   const [loadError, setLoadError] = useState<string | null>(null);
   const deferredQuery = useDeferredValue(query.trim().toLowerCase());
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const catalogRef = useRef<HTMLDivElement | null>(null);
+  const loadingRef = useRef(false);
+  const restoredRef = useRef(false);
+  const stateRef = useRef({
+    stations: initialStations,
+    offset: initialOffset,
+    hasMore: true,
+    query: "",
+  });
   const searchParams = useSearchParams();
   const { favoriteStations, recentStations } = usePlayer();
+
+  stateRef.current = { stations, offset, hasMore, query };
+
+  const persistScrollState = useCallback(() => {
+    const current = stateRef.current;
+    saveHomeScrollState({
+      scrollY: window.scrollY,
+      offset: current.offset,
+      stations: current.stations,
+      hasMore: current.hasMore,
+      query: current.query,
+    });
+  }, []);
 
   useEffect(() => {
     const initialQuery = searchParams.get("q");
@@ -36,34 +93,71 @@ export function StationsPageClient({
     }
   }, [searchParams]);
 
+  // Restore catalog + scroll position when returning from a station page.
+  // Prefer explicit hash anchors over restored scroll when present.
   useEffect(() => {
-    if (!hasMore || deferredQuery) return;
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
+    if (restoredRef.current) return;
+    restoredRef.current = true;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries;
-        if (entry.isIntersecting && !isLoading) {
-          void loadMore();
-        }
-      },
-      {
-        root: null,
-        rootMargin: "200px",
-        threshold: 0.1,
-      },
-    );
+    const hash = window.location.hash.replace(/^#/, "");
+    if (hash) {
+      requestAnimationFrame(() => {
+        const el = document.getElementById(hash);
+        if (el) smoothScrollIntoView(el, "start");
+      });
+      return;
+    }
 
-    observer.observe(sentinel);
-    return () => {
-      observer.disconnect();
+    const saved = readHomeScrollState();
+    if (!saved || saved.stations.length === 0) return;
+
+    setStations(saved.stations);
+    setOffset(saved.offset);
+    setHasMore(saved.hasMore);
+    if (saved.query) setQuery(saved.query);
+
+    const targetY = saved.scrollY;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        smoothScrollTo(targetY, "auto");
+      });
+    });
+  }, []);
+
+  // Persist scroll state while browsing and before leaving the page.
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") persistScrollState();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasMore, isLoading, deferredQuery]);
+    const onPageHide = () => persistScrollState();
 
-  const loadMore = async () => {
-    if (isLoading || !hasMore) return;
+    window.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pagehide", onPageHide);
+
+    const interval = window.setInterval(persistScrollState, 1500);
+
+    return () => {
+      persistScrollState();
+      window.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pagehide", onPageHide);
+      window.clearInterval(interval);
+    };
+  }, [persistScrollState]);
+
+  // Bring results into view when searching.
+  useEffect(() => {
+    if (!deferredQuery) return;
+    const catalog = catalogRef.current;
+    if (!catalog) return;
+    const frame = requestAnimationFrame(() => {
+      smoothScrollIntoView(catalog, "start");
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [deferredQuery]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingRef.current || !hasMore) return;
+    loadingRef.current = true;
     setIsLoading(true);
     setLoadError(null);
 
@@ -99,9 +193,36 @@ export function StationsPageClient({
       console.error(error);
       setLoadError("Couldn’t load more stations. Scroll again to retry.");
     } finally {
+      loadingRef.current = false;
       setIsLoading(false);
     }
-  };
+  }, [hasMore, offset, pageSize]);
+
+  useEffect(() => {
+    if (!hasMore || deferredQuery) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && !loadingRef.current) {
+          void loadMore();
+        }
+      },
+      {
+        root: null,
+        // Prefetch ~1–1.5 viewports ahead for continuous scrolling.
+        rootMargin: "1200px 0px",
+        threshold: 0,
+      },
+    );
+
+    observer.observe(sentinel);
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMore, deferredQuery, loadMore, stations.length]);
 
   const filteredStations = useMemo(() => {
     if (!deferredQuery) return stations;
@@ -125,8 +246,13 @@ export function StationsPageClient({
     [stations],
   );
 
+  const handleClearSearch = () => {
+    setQuery("");
+    clearHomeScrollState();
+  };
+
   return (
-    <div className="flex h-full flex-1 flex-col gap-8">
+    <div ref={catalogRef} className="flex h-full flex-1 flex-col gap-8">
       <div className="relative">
         <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
         <input
@@ -140,7 +266,7 @@ export function StationsPageClient({
         {query ? (
           <button
             type="button"
-            onClick={() => setQuery("")}
+            onClick={handleClearSearch}
             className="absolute right-2.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-[var(--muted)] hover:bg-white/5 hover:text-[var(--text)]"
             aria-label="Clear search"
           >
@@ -151,62 +277,54 @@ export function StationsPageClient({
 
       {!deferredQuery && favoriteStations.length > 0 ? (
         <section className="space-y-3">
-          <div>
-            <h2 className="font-display text-lg font-semibold">Favorites</h2>
-            <p className="text-sm text-[var(--muted)]">
-              Your saved Tamil stations, ready to resume.
-            </p>
-          </div>
+          <SectionHeading
+            id="favorites"
+            title="Favorites"
+            description="Your saved Tamil stations, ready to resume."
+          />
           <StationGrid stations={favoriteStations} />
         </section>
       ) : null}
 
       {!deferredQuery && recentStations.length > 0 ? (
         <section className="space-y-3">
-          <div>
-            <h2 className="font-display text-lg font-semibold">Recently played</h2>
-            <p className="text-sm text-[var(--muted)]">
-              Pick up where you left off.
-            </p>
-          </div>
+          <SectionHeading
+            id="recent"
+            title="Recently played"
+            description="Pick up where you left off."
+          />
           <StationGrid stations={recentStations} />
         </section>
       ) : null}
 
       {!deferredQuery ? (
         <section className="space-y-3">
-          <div>
-            <h2 className="font-display text-lg font-semibold">Popular now</h2>
-            <p className="text-sm text-[var(--muted)]">
-              Most listened Tamil streams from the catalogue.
-            </p>
-          </div>
+          <SectionHeading
+            id="popular"
+            title="Popular now"
+            description="Most listened Tamil streams from the catalogue."
+          />
           <StationGrid stations={popularStations} />
         </section>
       ) : null}
 
       <section className="space-y-3">
-        <div>
-          <h2 className="font-display text-lg font-semibold">
-            {deferredQuery ? "Search results" : "All stations"}
-          </h2>
-          <p className="text-sm text-[var(--muted)]">
-            {deferredQuery
+        <SectionHeading
+          id="all-stations"
+          title={deferredQuery ? "Search results" : "All stations"}
+          description={
+            deferredQuery
               ? `${filteredStations.length} match${filteredStations.length === 1 ? "" : "es"} for “${query.trim()}”`
-              : "Handpicked Tamil radio streams from around the world."}
-          </p>
-        </div>
+              : "Handpicked Tamil radio streams from around the world."
+          }
+        />
         <StationGrid stations={filteredStations} />
       </section>
 
       {!deferredQuery ? (
-        <div ref={sentinelRef} className="h-10 w-full">
-          {isLoading && (
-            <div className="flex items-center justify-center text-[11px] text-[var(--muted)]">
-              Loading more stations…
-            </div>
-          )}
-          {loadError && (
+        <div ref={sentinelRef} className="min-h-10 w-full space-y-4 pb-2">
+          {isLoading ? <StationGridSkeleton count={8} /> : null}
+          {loadError ? (
             <button
               type="button"
               onClick={() => void loadMore()}
@@ -214,12 +332,12 @@ export function StationsPageClient({
             >
               {loadError}
             </button>
-          )}
-          {!hasMore && stations.length > 0 && !loadError && (
+          ) : null}
+          {!hasMore && stations.length > 0 && !loadError ? (
             <div className="flex items-center justify-center text-[11px] text-[var(--muted)]">
               You’ve reached the end of the list.
             </div>
-          )}
+          ) : null}
         </div>
       ) : null}
     </div>

@@ -45,7 +45,7 @@ export function MobileNav() {
             aria-label="Close menu"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute inset-y-0 right-0 flex w-[min(100%,20rem)] flex-col border-l border-[var(--border)] bg-[#0d1411] p-4 shadow-2xl">
+          <div className="absolute inset-y-0 right-0 flex w-[min(100%,20rem)] flex-col overscroll-y-contain border-l border-[var(--border)] bg-[#0d1411] p-4 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
               <div className="font-display text-lg font-semibold">Library</div>
               <button
@@ -62,7 +62,7 @@ export function MobileNav() {
               <Heart className="h-3.5 w-3.5" />
               Favorites
             </div>
-            <div className="mb-6 max-h-40 space-y-1 overflow-y-auto">
+            <div className="scroll-fade-y mb-6 max-h-40 space-y-1">
               {favoriteStations.length === 0 ? (
                 <p className="text-xs text-[var(--muted)]">No favorites yet.</p>
               ) : (
@@ -91,7 +91,7 @@ export function MobileNav() {
               <Clock className="h-3.5 w-3.5" />
               Recent
             </div>
-            <div className="flex-1 space-y-1 overflow-y-auto">
+            <div className="scroll-fade-y min-h-0 flex-1 space-y-1">
               {recentStations.length === 0 ? (
                 <p className="text-xs text-[var(--muted)]">
                   Play a station to build history.
