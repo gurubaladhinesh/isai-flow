@@ -6,6 +6,7 @@ import {
 import { notFound } from "next/navigation";
 import { MapPin, Signal, Headphones } from "lucide-react";
 import { Breadcrumb } from "@/src/components/Breadcrumb";
+import { ShareButtons } from "@/src/components/ShareButtons";
 import { StationPlayControls } from "@/src/components/StationPlayControls";
 import { StationArtwork } from "@/src/components/StationArtwork";
 import { StationGrid } from "@/src/components/StationGrid";
@@ -17,9 +18,16 @@ import {
 import { SITE_NAME, SITE_URL } from "@/src/lib/site";
 import {
   buildBreadcrumbJsonLd,
+  buildFaqJsonLd,
   buildStationJsonLd,
   getStationOgImage,
 } from "@/src/lib/seo";
+import {
+  buildStationDiasporaNote,
+  buildStationFaqs,
+  buildStationIntro,
+  buildStationListeningGuide,
+} from "@/src/lib/station-content";
 
 export const revalidate = 3600;
 
@@ -65,8 +73,16 @@ export async function generateMetadata({ params }: PageProps) {
   const ogImage = getStationOgImage(station);
 
   return {
-    title: `${baseTitle} - Listen Live | ${SITE_NAME} Tamil Radio`,
-    description: `Listen to ${baseTitle} live on ${SITE_NAME}. ${location}. ${bitrateInfo} streaming. ${station.tags ? station.tags : "Tamil music and entertainment"}.`,
+    title: `${baseTitle} - Listen Live Online Free | ${SITE_NAME}`,
+    description: `Listen to ${baseTitle} live online for free on ${SITE_NAME}. ${location}. ${bitrateInfo} Tamil radio streaming — no app download required.`,
+    keywords: [
+      `${baseTitle} online`,
+      `listen ${baseTitle}`,
+      `${baseTitle} live`,
+      "tamil radio online",
+      "tamil fm free",
+      ...(station.tags ? station.tags.split(",").map((t) => t.trim()) : []),
+    ],
     openGraph: {
       title: `${baseTitle} - Listen Live on ${SITE_NAME}`,
       description: `Stream ${baseTitle} live. ${location}. ${bitrateInfo} audio quality.`,
@@ -109,6 +125,9 @@ export default async function StationPage({ params }: PageProps) {
     : station.country || "Worldwide";
 
   const relatedStations = await getRelatedStations(station).catch(() => []);
+  const stationPath = getStationUrl(station);
+  const stationUrl = `${SITE_URL}${stationPath}`;
+  const faqs = buildStationFaqs(station);
 
   const breadcrumbItems = [
     { label: "Home", href: "/" },
@@ -118,6 +137,7 @@ export default async function StationPage({ params }: PageProps) {
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd(breadcrumbItems);
   const stationJsonLd = buildStationJsonLd(station);
+  const faqJsonLd = buildFaqJsonLd(faqs);
 
   return (
     <div className="flex h-full flex-1 flex-col gap-6">
@@ -128,6 +148,10 @@ export default async function StationPage({ params }: PageProps) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(stationJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
       <Breadcrumb items={breadcrumbItems} />
 
@@ -189,15 +213,21 @@ export default async function StationPage({ params }: PageProps) {
             ) : null}
 
             <StationPlayControls station={station} />
+            <ShareButtons title={station.name} url={stationUrl} />
           </div>
         </div>
       </section>
 
       <section className="rounded-3xl border border-[var(--border)] bg-white/[0.02] p-5 sm:p-6">
         <h2 className="font-display text-lg font-semibold text-[var(--text)]">
-          About this station
+          About {station.name}
         </h2>
-        <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div className="mt-4 space-y-3 text-sm leading-relaxed text-[var(--muted)] sm:text-base">
+          <p>{buildStationIntro(station)}</p>
+          <p>{buildStationListeningGuide(station)}</p>
+          <p>{buildStationDiasporaNote(station)}</p>
+        </div>
+        <dl className="mt-6 grid gap-4 border-t border-[var(--border)] pt-6 sm:grid-cols-2">
           <div>
             <dt className="text-xs uppercase tracking-wide text-[var(--muted)]">
               Language
@@ -231,20 +261,6 @@ export default async function StationPage({ params }: PageProps) {
             </dd>
           </div>
         </dl>
-        <p className="mt-5 text-sm leading-relaxed text-[var(--muted)]">
-          Tune into {station.name} on {SITE_NAME} for live Tamil programming
-          from {locationLabel}.
-          {tags.length > 0
-            ? ` This station is known for ${tags.slice(0, 3).join(", ")}.`
-            : ""}{" "}
-          Press Play to start streaming in the persistent player, or save it to
-          your favorites for quick access later.
-        </p>
-        <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
-          {SITE_NAME} streams {station.name} directly in your browser — no app
-          download required. Works on mobile, tablet, and desktop with free,
-          high-quality Tamil radio.
-        </p>
       </section>
 
       <section className="rounded-3xl border border-[var(--border)] bg-white/[0.02] p-5 sm:p-6">
@@ -252,34 +268,14 @@ export default async function StationPage({ params }: PageProps) {
           Frequently asked questions
         </h2>
         <dl className="mt-4 space-y-4">
-          <div>
-            <dt className="text-sm font-medium text-[var(--text)]">
-              Is {station.name} free to listen?
-            </dt>
-            <dd className="mt-1 text-sm text-[var(--muted)]">
-              Yes. {SITE_NAME} provides free access to {station.name} and all
-              Tamil radio stations in our catalogue.
-            </dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-[var(--text)]">
-              Can I listen on my phone?
-            </dt>
-            <dd className="mt-1 text-sm text-[var(--muted)]">
-              Yes. Open this page on any mobile browser and tap Play to stream{" "}
-              {station.name} live.
-            </dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-[var(--text)]">
-              What audio quality does this stream offer?
-            </dt>
-            <dd className="mt-1 text-sm text-[var(--muted)]">
-              {station.bitrate > 0
-                ? `${station.name} streams at ${station.bitrate} kbps for clear Tamil audio.`
-                : `${station.name} offers variable bitrate streaming depending on your connection.`}
-            </dd>
-          </div>
+          {faqs.map((faq) => (
+            <div key={faq.question}>
+              <dt className="text-sm font-medium text-[var(--text)]">
+                {faq.question}
+              </dt>
+              <dd className="mt-1 text-sm text-[var(--muted)]">{faq.answer}</dd>
+            </div>
+          ))}
         </dl>
       </section>
 

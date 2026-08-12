@@ -63,6 +63,56 @@ export function buildBreadcrumbJsonLd(
   };
 }
 
+export function buildFaqJsonLd(
+  faqs: Array<{ question: string; answer: string }>,
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.answer,
+      },
+    })),
+  };
+}
+
+export function buildArticleJsonLd(post: {
+  title: string;
+  description: string;
+  slug: string;
+  publishedAt: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.title,
+    description: post.description,
+    url: absoluteUrl(`/blog/${post.slug}`),
+    datePublished: post.publishedAt,
+    dateModified: post.publishedAt,
+    author: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: {
+        "@type": "ImageObject",
+        url: absoluteUrl("/favicon.ico"),
+      },
+    },
+    inLanguage: "en",
+    mainEntityOfPage: absoluteUrl(`/blog/${post.slug}`),
+  };
+}
+
 export function buildStationJsonLd(station: Station) {
   const path = getStationUrl(station);
   const tags = station.tags

@@ -4,7 +4,7 @@ import { POPULAR_GENRES, POPULAR_LOCATIONS, SITE_NAME } from "@/src/lib/site";
 export function Footer() {
   return (
     <footer className="mt-4 border-t border-[var(--border)] pt-6 text-sm text-[var(--muted)]">
-      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <h2 className="font-display text-sm font-semibold text-[var(--text)]">
             About {SITE_NAME}
@@ -31,6 +31,38 @@ export function Footer() {
                 </Link>
               </li>
             ))}
+          </ul>
+        </div>
+
+        <div>
+          <h2 className="font-display text-sm font-semibold text-[var(--text)]">
+            Guides
+          </h2>
+          <ul className="mt-2 space-y-1.5">
+            <li>
+              <Link
+                href="/blog"
+                className="transition hover:text-[var(--accent-bright)]"
+              >
+                Tamil radio guides
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/blog/best-tamil-fm-radio-stations-online"
+                className="transition hover:text-[var(--accent-bright)]"
+              >
+                Best Tamil FM stations
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/blog/listen-tamil-radio-from-abroad"
+                className="transition hover:text-[var(--accent-bright)]"
+              >
+                Listen from abroad
+              </Link>
+            </li>
           </ul>
         </div>
 
