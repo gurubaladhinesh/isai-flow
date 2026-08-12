@@ -16,6 +16,7 @@ Isai Flow is a premium, minimal Tamil internet radio player. It aggregates handp
 
 ## Useful Links
 - [Homepage](https://www.isaiflow.in/)
+- [Blog / Guides](https://www.isaiflow.in/blog)
 - [Sitemap](https://www.isaiflow.in/sitemap.xml)
 - [Robots](https://www.isaiflow.in/robots.txt)
 - [Source Code](https://github.com/gurubaladhinesh/isai-flow)

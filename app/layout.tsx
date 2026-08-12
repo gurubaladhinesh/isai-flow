@@ -6,8 +6,11 @@ import { Sidebar } from "@/src/components/Sidebar";
 import { PlayerBar } from "@/src/components/PlayerBar";
 import { MobileNav } from "@/src/components/MobileNav";
 import { Footer } from "@/src/components/Footer";
+import { GoogleAnalytics } from "@/src/components/GoogleAnalytics";
 import { SITE_NAME, SITE_URL } from "@/src/lib/site";
 import { buildWebsiteJsonLd } from "@/src/lib/seo";
+
+const GOOGLE_SITE_VERIFICATION = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -61,6 +64,13 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  ...(GOOGLE_SITE_VERIFICATION
+    ? {
+        verification: {
+          google: GOOGLE_SITE_VERIFICATION,
+        },
+      }
+    : {}),
 };
 
 interface RootLayoutProps {
@@ -91,6 +101,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           } as React.CSSProperties
         }
       >
+        <GoogleAnalytics />
         <PlayerProvider>
           <div className="flex min-h-screen pb-20 sm:pb-24">
             <Sidebar />

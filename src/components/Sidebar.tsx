@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Clock, Heart, Library } from "lucide-react";
+import { BookOpen, Clock, Heart, Library } from "lucide-react";
 import { usePlayer } from "@/src/context/PlayerContext";
 import { getStationUrl } from "@/src/lib/slug";
 import { smoothScrollIntoView } from "@/src/lib/scroll";
@@ -97,6 +97,17 @@ export function Sidebar() {
             <span>All Stations</span>
           </Link>
         )}
+        <Link
+          href="/blog"
+          className={`flex min-h-10 w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium transition ${
+            pathname.startsWith("/blog")
+              ? "bg-[var(--accent)]/15 text-[var(--accent-bright)]"
+              : "text-[var(--muted)] hover:bg-white/5 hover:text-[var(--text)]"
+          }`}
+        >
+          <BookOpen className="h-4 w-4" />
+          <span>Guides</span>
+        </Link>
       </nav>
 
       <div className="mt-8 flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">

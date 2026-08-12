@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getAllTamilStations } from "@/src/lib/radio-api";
 import { createSlug } from "@/src/lib/slug";
+import { getAllBlogSlugs } from "@/src/lib/blog";
 import { POPULAR_GENRES, POPULAR_LOCATIONS, SITE_URL } from "@/src/lib/site";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -21,6 +22,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${SITE_URL}/location/${location.slug}`,
       lastModified: new Date(),
       changeFrequency: "weekly" as const,
+      priority: 0.7,
+    })),
+    {
+      url: `${SITE_URL}/blog`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    },
+    ...getAllBlogSlugs().map((slug) => ({
+      url: `${SITE_URL}/blog/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
       priority: 0.7,
     })),
   ];
