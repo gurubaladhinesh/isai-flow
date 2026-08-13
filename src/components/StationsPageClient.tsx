@@ -17,7 +17,6 @@ import { stationMatchesQuery } from "@/src/lib/station-search";
 import {
   fetchStationPage,
   mergeStations,
-  prefetchAllStations,
   prefetchStationPage,
   searchStations,
   seedStationPage,
@@ -224,7 +223,6 @@ export function StationsPageClient({
   useEffect(() => {
     seedStationPage(0, pageSize, initialStations);
     queuePrefetch(initialOffset);
-    prefetchAllStations();
   }, [initialOffset, initialStations, pageSize, queuePrefetch]);
 
   useEffect(() => {
