@@ -3,7 +3,6 @@
 import {
   startTransition,
   useCallback,
-  useDeferredValue,
   useEffect,
   useMemo,
   useRef,
@@ -14,10 +13,12 @@ import { Search, X } from "lucide-react";
 import type { Station } from "@/src/lib/radio-api";
 import { StationGrid } from "@/src/components/StationGrid";
 import { usePlayer } from "@/src/context/PlayerContext";
+import { stationMatchesQuery } from "@/src/lib/station-search";
 import {
   fetchStationPage,
   mergeStations,
   prefetchStationPage,
+  searchStations,
   seedStationPage,
 } from "@/src/lib/station-page-cache";
 import {
@@ -36,6 +37,7 @@ interface StationsPageClientProps {
 
 const PREFETCH_ROOT_MARGIN = "300% 0px 300% 0px";
 const SKELETON_COUNT = 12;
+const SEARCH_DEBOUNCE_MS = 200;
 
 function SectionHeading({
   id,
@@ -68,11 +70,15 @@ export function StationsPageClient({
   const [hasMore, setHasMore] = useState(true);
   const [query, setQuery] = useState("");
   const [loadError, setLoadError] = useState<string | null>(null);
-  const deferredQuery = useDeferredValue(query.trim().toLowerCase());
+  const [searchResults, setSearchResults] = useState<Station[] | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const normalizedQuery = query.trim().toLowerCase();
   const loadTriggerRef = useRef<HTMLDivElement | null>(null);
   const catalogRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef(false);
   const restoredRef = useRef(false);
+  const searchRequestIdRef = useRef(0);
   const offsetRef = useRef(initialOffset);
   const hasMoreRef = useRef(true);
   const stateRef = useRef({
@@ -162,14 +168,14 @@ export function StationsPageClient({
   }, [persistScrollState]);
 
   useEffect(() => {
-    if (!deferredQuery) return;
+    if (!normalizedQuery) return;
     const catalog = catalogRef.current;
     if (!catalog) return;
     const frame = requestAnimationFrame(() => {
       smoothScrollIntoView(catalog, "start");
     });
     return () => cancelAnimationFrame(frame);
-  }, [deferredQuery]);
+  }, [normalizedQuery]);
 
   const appendStations = useCallback((incoming: Station[]) => {
     startTransition(() => {
@@ -220,7 +226,7 @@ export function StationsPageClient({
   }, [initialOffset, initialStations, pageSize, queuePrefetch]);
 
   useEffect(() => {
-    if (!hasMore || deferredQuery) return;
+    if (!hasMore || normalizedQuery) return;
     const trigger = loadTriggerRef.current;
     if (!trigger) return;
 
@@ -240,24 +246,53 @@ export function StationsPageClient({
 
     observer.observe(trigger);
     return () => observer.disconnect();
-  }, [hasMore, deferredQuery, loadMore, stations.length]);
+  }, [hasMore, normalizedQuery, loadMore, stations.length]);
+
+  useEffect(() => {
+    if (!normalizedQuery) {
+      searchRequestIdRef.current += 1;
+      setSearchResults(null);
+      setIsSearching(false);
+      setSearchError(null);
+      return;
+    }
+
+    const requestId = ++searchRequestIdRef.current;
+    setIsSearching(true);
+    setSearchError(null);
+    setSearchResults(null);
+
+    const timer = window.setTimeout(() => {
+      void searchStations(normalizedQuery).then(
+        (matches) => {
+          if (searchRequestIdRef.current !== requestId) return;
+          setSearchResults(matches);
+          setIsSearching(false);
+        },
+        (error: unknown) => {
+          if (searchRequestIdRef.current !== requestId) return;
+          console.error(error);
+          setSearchError(
+            "Couldn’t search the full catalogue. Showing loaded stations.",
+          );
+          setSearchResults(null);
+          setIsSearching(false);
+        },
+      );
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [normalizedQuery]);
 
   const filteredStations = useMemo(() => {
-    if (!deferredQuery) return stations;
-    return stations.filter((station) => {
-      const haystack = [
-        station.name,
-        station.country,
-        station.state,
-        station.tags,
-        station.language,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(deferredQuery);
-    });
-  }, [stations, deferredQuery]);
+    if (!normalizedQuery) return stations;
+    if (searchResults) return searchResults;
+    return stations.filter((station) =>
+      stationMatchesQuery(station, normalizedQuery),
+    );
+  }, [stations, normalizedQuery, searchResults]);
 
   const popularStations = useMemo(
     () => [...stations].sort((a, b) => b.clickcount - a.clickcount).slice(0, 8),
@@ -270,9 +305,9 @@ export function StationsPageClient({
   );
 
   const catalogStations = useMemo(() => {
-    if (deferredQuery) return filteredStations;
+    if (normalizedQuery) return filteredStations;
     return stations.filter((station) => !popularIds.has(station.stationuuid));
-  }, [deferredQuery, filteredStations, popularIds, stations]);
+  }, [normalizedQuery, filteredStations, popularIds, stations]);
 
   const loadTriggerIndex = Math.max(0, catalogStations.length - 12);
 
@@ -305,7 +340,7 @@ export function StationsPageClient({
         ) : null}
       </div>
 
-      {!deferredQuery && favoriteStations.length > 0 ? (
+      {!normalizedQuery && favoriteStations.length > 0 ? (
         <section className="space-y-3">
           <SectionHeading
             id="favorites"
@@ -316,7 +351,7 @@ export function StationsPageClient({
         </section>
       ) : null}
 
-      {!deferredQuery && recentStations.length > 0 ? (
+      {!normalizedQuery && recentStations.length > 0 ? (
         <section className="space-y-3">
           <SectionHeading
             id="recent"
@@ -327,7 +362,7 @@ export function StationsPageClient({
         </section>
       ) : null}
 
-      {!deferredQuery ? (
+      {!normalizedQuery ? (
         <section className="space-y-3">
           <SectionHeading
             id="popular"
@@ -341,27 +376,40 @@ export function StationsPageClient({
       <section className="space-y-3">
         <SectionHeading
           id="all-stations"
-          title={deferredQuery ? "Search results" : "All stations"}
+          title={normalizedQuery ? "Search results" : "All stations"}
           description={
-            deferredQuery
-              ? `${filteredStations.length} match${filteredStations.length === 1 ? "" : "es"} for “${query.trim()}”`
+            normalizedQuery
+              ? isSearching
+                ? `Searching all stations for “${query.trim()}”…`
+                : `${filteredStations.length} match${filteredStations.length === 1 ? "" : "es"} for “${query.trim()}”`
               : "Handpicked Tamil radio streams from around the world."
           }
         />
         <StationGrid
           stations={catalogStations}
-          loadingCount={!deferredQuery && isLoading ? SKELETON_COUNT : 0}
+          loadingCount={
+            (!normalizedQuery && isLoading) ||
+            (normalizedQuery && isSearching && catalogStations.length === 0)
+              ? SKELETON_COUNT
+              : 0
+          }
           priorityCount={8}
           loadTriggerIndex={
-            !deferredQuery && catalogStations.length > 0
+            !normalizedQuery && catalogStations.length > 0
               ? loadTriggerIndex
               : undefined
           }
-          onLoadTrigger={!deferredQuery ? handleLoadTrigger : undefined}
+          onLoadTrigger={!normalizedQuery ? handleLoadTrigger : undefined}
         />
       </section>
 
-      {!deferredQuery && loadError ? (
+      {normalizedQuery && searchError ? (
+        <p className="mx-auto text-center text-[11px] text-[var(--warm)]">
+          {searchError}
+        </p>
+      ) : null}
+
+      {!normalizedQuery && loadError ? (
         <button
           type="button"
           onClick={() => void loadMore()}
@@ -371,7 +419,7 @@ export function StationsPageClient({
         </button>
       ) : null}
 
-      {!deferredQuery && !hasMore && stations.length > 0 && !loadError ? (
+      {!normalizedQuery && !hasMore && stations.length > 0 && !loadError ? (
         <div className="flex items-center justify-center pb-2 text-[11px] text-[var(--muted)]">
           You’ve reached the end of the list.
         </div>
