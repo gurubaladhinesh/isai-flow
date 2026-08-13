@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
-import { getTamilStations } from "@/src/lib/radio-api";
+import { getStationsByLanguage } from "@/src/lib/radio-api";
+import { isLiveLanguageSlug } from "@/src/lib/languages";
 
-const getCachedTamilStations = unstable_cache(
-  async (offset: number, limit: number) => getTamilStations({ offset, limit }),
-  ["tamil-stations-page"],
+const getCachedStations = unstable_cache(
+  async (language: string, offset: number, limit: number) =>
+    getStationsByLanguage(language, { offset, limit }),
+  ["stations-by-language-page"],
   { revalidate: 3600 },
 );
 
@@ -13,12 +15,17 @@ export async function GET(request: Request) {
 
   const offsetParam = searchParams.get("offset");
   const limitParam = searchParams.get("limit");
+  const languageParam = searchParams.get("language")?.trim().toLowerCase();
+  const language =
+    languageParam && isLiveLanguageSlug(languageParam)
+      ? languageParam
+      : "tamil";
 
   const offset = Number.isFinite(Number(offsetParam)) ? Number(offsetParam) : 0;
   const limit = Number.isFinite(Number(limitParam)) ? Number(limitParam) : 48;
 
   try {
-    const stations = await getCachedTamilStations(offset, limit);
+    const stations = await getCachedStations(language, offset, limit);
     return NextResponse.json(
       { stations },
       {

@@ -32,6 +32,8 @@ interface StationsPageClientProps {
   initialStations: Station[];
   initialOffset: number;
   pageSize?: number;
+  language?: string;
+  languageLabel?: string;
 }
 
 const PREFETCH_ROOT_MARGIN = "300% 0px 300% 0px";
@@ -61,6 +63,8 @@ export function StationsPageClient({
   initialStations,
   initialOffset,
   pageSize = 48,
+  language = "tamil",
+  languageLabel = "Tamil",
 }: StationsPageClientProps) {
   const [stations, setStations] = useState<Station[]>(initialStations);
   const [offset, setOffset] = useState(initialOffset);
@@ -88,13 +92,15 @@ export function StationsPageClient({
   hasMoreRef.current = hasMore;
   stateRef.current = { stations, offset, hasMore, query };
 
+  const persistHomeScroll = language === "tamil";
+
   const queuePrefetch = useCallback(
     (fromOffset: number) => {
       if (!hasMoreRef.current) return;
-      prefetchStationPage(fromOffset, pageSize);
-      prefetchStationPage(fromOffset + pageSize, pageSize);
+      prefetchStationPage(fromOffset, pageSize, language);
+      prefetchStationPage(fromOffset + pageSize, pageSize, language);
     },
-    [pageSize],
+    [language, pageSize],
   );
 
   const persistScrollState = useCallback(() => {
@@ -128,6 +134,7 @@ export function StationsPageClient({
       return;
     }
 
+    if (!persistHomeScroll) return;
     const saved = readHomeScrollState();
     if (!saved || saved.stations.length === 0) return;
 
@@ -143,9 +150,10 @@ export function StationsPageClient({
         smoothScrollTo(saved.scrollY, "auto");
       });
     });
-  }, []);
+  }, [persistHomeScroll]);
 
   useEffect(() => {
+    if (!persistHomeScroll) return;
     const onVisibility = () => {
       if (document.visibilityState === "hidden") persistScrollState();
     };
@@ -159,7 +167,7 @@ export function StationsPageClient({
       window.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("pagehide", onPageHide);
     };
-  }, [persistScrollState]);
+  }, [persistHomeScroll, persistScrollState]);
 
   useEffect(() => {
     if (!deferredQuery) return;
@@ -187,7 +195,7 @@ export function StationsPageClient({
     const requestOffset = offsetRef.current;
 
     try {
-      const next = await fetchStationPage(requestOffset, pageSize);
+      const next = await fetchStationPage(requestOffset, pageSize, language);
 
       appendStations(next);
       const nextOffset = requestOffset + next.length;
@@ -207,7 +215,7 @@ export function StationsPageClient({
       loadingRef.current = false;
       setIsLoading(false);
     }
-  }, [appendStations, pageSize, queuePrefetch]);
+  }, [appendStations, language, pageSize, queuePrefetch]);
 
   const handleLoadTrigger = useCallback((node: HTMLDivElement | null) => {
     loadTriggerRef.current = node;
@@ -215,9 +223,9 @@ export function StationsPageClient({
 
   // Seed client cache with SSR data and warm upcoming pages immediately.
   useEffect(() => {
-    seedStationPage(0, pageSize, initialStations);
+    seedStationPage(0, pageSize, initialStations, language);
     queuePrefetch(initialOffset);
-  }, [initialOffset, initialStations, pageSize, queuePrefetch]);
+  }, [initialOffset, initialStations, language, pageSize, queuePrefetch]);
 
   useEffect(() => {
     if (!hasMore || deferredQuery) return;
@@ -310,7 +318,7 @@ export function StationsPageClient({
           <SectionHeading
             id="favorites"
             title="Favorites"
-            description="Your saved Tamil stations, ready to resume."
+            description={`Your saved ${languageLabel} stations, ready to resume.`}
           />
           <StationGrid stations={favoriteStations} priorityCount={4} />
         </section>
@@ -332,7 +340,7 @@ export function StationsPageClient({
           <SectionHeading
             id="popular"
             title="Popular now"
-            description="Most listened Tamil streams from the catalogue."
+            description={`Most listened ${languageLabel} streams from the catalogue.`}
           />
           <StationGrid stations={popularStations} priorityCount={8} />
         </section>
@@ -345,7 +353,7 @@ export function StationsPageClient({
           description={
             deferredQuery
               ? `${filteredStations.length} match${filteredStations.length === 1 ? "" : "es"} for “${query.trim()}”`
-              : "Handpicked Tamil radio streams from around the world."
+              : `Handpicked ${languageLabel} radio streams from around the world.`
           }
         />
         <StationGrid

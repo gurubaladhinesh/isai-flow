@@ -20,29 +20,40 @@ interface FetchStationsOptions {
   signal?: AbortSignal;
   offset?: number;
   limit?: number;
+  language?: string;
 }
 
-export async function getTamilStations(
+const RADIO_BROWSER_HEADERS = {
+  "Content-Type": "application/json",
+  "User-Agent": "isai-flow/1.0 (https://www.isaiflow.in)",
+};
+
+function resolveLanguage(options: FetchStationsOptions): string {
+  return options.language?.trim() || "tamil";
+}
+
+async function searchStations(
+  extraParams: Record<string, string>,
   options: FetchStationsOptions = {},
 ): Promise<Station[]> {
   const url = new URL(RADIO_BROWSER_ENDPOINT);
-
   const limit = options.limit ?? 32;
   const offset = options.offset ?? 0;
 
-  url.searchParams.set("language", "tamil");
+  url.searchParams.set("language", resolveLanguage(options));
   url.searchParams.set("limit", String(limit));
   url.searchParams.set("offset", String(offset));
   url.searchParams.set("order", "clickcount");
   url.searchParams.set("hidebroken", "true");
   url.searchParams.set("reverse", "true");
 
+  for (const [key, value] of Object.entries(extraParams)) {
+    url.searchParams.set(key, value);
+  }
+
   const response = await fetch(url.toString(), {
     method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "User-Agent": "isai-flow/1.0 (https://www.isaiflow.in)",
-    },
+    headers: RADIO_BROWSER_HEADERS,
     signal: options.signal,
     next: { revalidate: 3600 },
   });
@@ -51,27 +62,45 @@ export async function getTamilStations(
     throw new Error(`Failed to fetch stations: ${response.statusText}`);
   }
 
-  const data = (await response.json()) as Station[];
+  return (await response.json()) as Station[];
+}
 
-  // Allow both HTTPS and HTTP streams and rely on Radio Browser's
-  // own `hidebroken=true` filter. We only de-duplicate by UUID.
+function uniqueStations(data: Station[]): Station[] {
   const uniqueById = new Map<string, Station>();
   for (const station of data) {
     if (!uniqueById.has(station.stationuuid)) {
       uniqueById.set(station.stationuuid, station);
     }
   }
-
   return Array.from(uniqueById.values());
 }
 
-export async function getAllTamilStations(): Promise<Station[]> {
+export async function getStationsByLanguage(
+  language: string,
+  options: FetchStationsOptions = {},
+): Promise<Station[]> {
+  const data = await searchStations({}, { ...options, language });
+  return uniqueStations(data);
+}
+
+export async function getTamilStations(
+  options: FetchStationsOptions = {},
+): Promise<Station[]> {
+  return getStationsByLanguage("tamil", options);
+}
+
+export async function getAllStationsByLanguage(
+  language: string,
+): Promise<Station[]> {
   const allStations: Station[] = [];
   const pageSize = 100;
   let offset = 0;
 
   while (true) {
-    const batch = await getTamilStations({ offset, limit: pageSize });
+    const batch = await getStationsByLanguage(language, {
+      offset,
+      limit: pageSize,
+    });
     if (batch.length === 0) {
       break;
     }
@@ -87,78 +116,25 @@ export async function getAllTamilStations(): Promise<Station[]> {
   return allStations;
 }
 
+export async function getAllTamilStations(): Promise<Station[]> {
+  return getAllStationsByLanguage("tamil");
+}
+
 export async function getStationsByTag(
   tag: string,
   options: FetchStationsOptions = {},
 ): Promise<Station[]> {
-  const url = new URL(RADIO_BROWSER_ENDPOINT);
-  const limit = options.limit ?? 32;
-  const offset = options.offset ?? 0;
-
-  url.searchParams.set("tag", tag);
-  url.searchParams.set("language", "tamil");
-  url.searchParams.set("limit", String(limit));
-  url.searchParams.set("offset", String(offset));
-  url.searchParams.set("order", "clickcount");
-  url.searchParams.set("hidebroken", "true");
-  url.searchParams.set("reverse", "true");
-
-  const response = await fetch(url.toString(), {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "User-Agent": "isai-flow/1.0 (https://www.isaiflow.in)",
-    },
-    signal: options.signal,
-    next: { revalidate: 3600 },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch stations by tag: ${response.statusText}`);
-  }
-
-  return (await response.json()) as Station[];
+  return searchStations({ tag }, options);
 }
 
 export async function getStationsByLocation(
   filters: { state?: string; country?: string },
   options: FetchStationsOptions = {},
 ): Promise<Station[]> {
-  const url = new URL(RADIO_BROWSER_ENDPOINT);
-  const limit = options.limit ?? 32;
-  const offset = options.offset ?? 0;
-
-  if (filters.state) {
-    url.searchParams.set("state", filters.state);
-  }
-  if (filters.country) {
-    url.searchParams.set("country", filters.country);
-  }
-
-  url.searchParams.set("language", "tamil");
-  url.searchParams.set("limit", String(limit));
-  url.searchParams.set("offset", String(offset));
-  url.searchParams.set("order", "clickcount");
-  url.searchParams.set("hidebroken", "true");
-  url.searchParams.set("reverse", "true");
-
-  const response = await fetch(url.toString(), {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "User-Agent": "isai-flow/1.0 (https://www.isaiflow.in)",
-    },
-    signal: options.signal,
-    next: { revalidate: 3600 },
-  });
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch stations by location: ${response.statusText}`,
-    );
-  }
-
-  return (await response.json()) as Station[];
+  const extra: Record<string, string> = {};
+  if (filters.state) extra.state = filters.state;
+  if (filters.country) extra.country = filters.country;
+  return searchStations(extra, options);
 }
 
 export async function getRelatedStations(
@@ -170,10 +146,13 @@ export async function getRelatedStations(
     .map((tag) => tag.trim())
     .filter(Boolean);
 
+  const language = station.language?.split(",")[0]?.trim() || "tamil";
+
   if (tags && tags.length > 0) {
-    const related = await getStationsByTag(tags[0], { limit: limit + 1 }).catch(
-      () => [] as Station[],
-    );
+    const related = await getStationsByTag(tags[0], {
+      limit: limit + 1,
+      language,
+    }).catch(() => [] as Station[]);
     const filtered = related.filter(
       (item) => item.stationuuid !== station.stationuuid,
     );
@@ -185,7 +164,7 @@ export async function getRelatedStations(
   if (station.country) {
     const related = await getStationsByLocation(
       { country: station.country },
-      { limit: limit + 1 },
+      { limit: limit + 1, language },
     ).catch(() => [] as Station[]);
     return related
       .filter((item) => item.stationuuid !== station.stationuuid)

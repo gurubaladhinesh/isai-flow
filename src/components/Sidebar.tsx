@@ -6,6 +6,7 @@ import { BookOpen, Clock, Heart, Library } from "lucide-react";
 import { usePlayer } from "@/src/context/PlayerContext";
 import { getStationUrl } from "@/src/lib/slug";
 import { smoothScrollIntoView } from "@/src/lib/scroll";
+import { LanguageNav } from "@/src/components/LanguageNav";
 import type { Station } from "@/src/lib/radio-api";
 
 function StationListItem({
@@ -73,7 +74,7 @@ export function Sidebar() {
             Isai Flow
           </div>
           <div className="text-[11px] text-[var(--muted)]">
-            Tamil Internet Radio
+            Internet Radio
           </div>
         </div>
       </Link>
@@ -109,6 +110,10 @@ export function Sidebar() {
           <span>Guides</span>
         </Link>
       </nav>
+
+      <div className="mt-6">
+        <LanguageNav />
+      </div>
 
       <div className="mt-8 flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
         <Heart className="h-3.5 w-3.5" />

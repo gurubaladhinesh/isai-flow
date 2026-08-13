@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { getTamilStations } from "@/src/lib/radio-api";
 import { StationsPageClient } from "@/src/components/StationsPageClient";
+import { LanguageNav } from "@/src/components/LanguageNav";
 
 export const revalidate = 3600; // Revalidate every hour
 
@@ -42,6 +43,9 @@ export default async function HomePage() {
             Stream film hits, Carnatic, and FM stations from around the world —
             without the clutter.
           </p>
+          <div className="mt-6">
+            <LanguageNav compact />
+          </div>
         </div>
       </header>
 
@@ -52,6 +56,8 @@ export default async function HomePage() {
             initialStations={stations}
             initialOffset={stations.length}
             pageSize={48}
+            language="tamil"
+            languageLabel="Tamil"
           />
         </Suspense>
       </section>

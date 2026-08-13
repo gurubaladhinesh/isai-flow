@@ -9,7 +9,7 @@
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
 
-Isai Flow is a single-page **Tamil internet radio** web app built with **Next.js (App Router)**, **Tailwind CSS**, and **Lucide Icons**. It aggregates Tamil radio stations from the Radio Browser API and provides a Spotify-like listening experience.
+Isai Flow is a **Tamil-first internet radio** web app built with **Next.js (App Router)**, **Tailwind CSS**, and **Lucide Icons**. It aggregates stations from the Radio Browser API and also lets you browse **Telugu, Malayalam, Kannada, Hindi, and Sinhala** catalogues.
 
 **Live at: [https://www.isaiflow.in/](https://www.isaiflow.in/)**
 
@@ -22,7 +22,8 @@ Isai Flow is a single-page **Tamil internet radio** web app built with **Next.js
 
 ## Features
 
-- Curated **Tamil** internet radio stations (tag-based search).
+- Curated **Tamil** internet radio stations on the homepage.
+- Additional language catalogues at `/listen/telugu`, `/listen/malayalam`, `/listen/kannada`, `/listen/hindi`, and `/listen/sinhala`.
 - Only **HTTPS** streams are used (suitable for Vercel/Railway, avoids mixed content).
 - Global audio player with:
   - Play / Pause

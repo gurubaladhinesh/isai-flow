@@ -9,6 +9,12 @@ function parseTags(station: Station): string[] {
     .filter(Boolean);
 }
 
+function languageLabel(station: Station): string {
+  const raw = station.language?.split(",")[0]?.trim();
+  if (!raw) return "Tamil";
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
+}
+
 function getLocationLabel(station: Station): string {
   if (station.state) {
     return `${station.state}, ${station.country}`;
@@ -22,9 +28,9 @@ export function buildStationIntro(station: Station): string {
   const tagPhrase =
     tags.length > 0
       ? ` featuring ${tags.slice(0, 3).join(", ")}`
-      : " with Tamil music and talk";
+      : ` with ${languageLabel(station)} music and talk`;
 
-  return `${station.name} is a live Tamil radio station broadcasting from ${location}${tagPhrase}. Stream it free on ${SITE_NAME} — no app download, no sign-up, just press play.`;
+  return `${station.name} is a live ${languageLabel(station)} radio station broadcasting from ${location}${tagPhrase}. Stream it free on ${SITE_NAME} — no app download, no sign-up, just press play.`;
 }
 
 export function buildStationListeningGuide(station: Station): string {
@@ -34,19 +40,20 @@ export function buildStationListeningGuide(station: Station): string {
       ? `${station.bitrate} kbps audio quality`
       : "adaptive streaming quality";
 
-  return `Whether you are in ${location} or listening from abroad, ${station.name} brings Tamil radio straight to your browser. ${SITE_NAME} delivers ${quality} with a persistent player that keeps playing as you browse other stations. Save ${station.name} to your favorites for one-tap access anytime.`;
+  return `Whether you are in ${location} or listening from abroad, ${station.name} brings ${languageLabel(station)} radio straight to your browser. ${SITE_NAME} delivers ${quality} with a persistent player that keeps playing as you browse other stations. Save ${station.name} to your favorites for one-tap access anytime.`;
 }
 
 export function buildStationDiasporaNote(station: Station): string {
   const tags = parseTags(station);
+  const lang = languageLabel(station);
   const genreHint =
     tags.some((tag) => /carnatic|classical|devotional/i.test(tag))
       ? "Carnatic and devotional listeners"
       : tags.some((tag) => /film|music|hits/i.test(tag))
-        ? "Tamil film music fans"
-        : "Tamil speakers";
+        ? `${lang} film music fans`
+        : `${lang} speakers`;
 
-  return `${genreHint} across the US, UK, Canada, Singapore, Malaysia, and the Gulf rely on ${SITE_NAME} to stay connected to Tamil culture. Bookmark this page and share it with family on WhatsApp so they can listen to ${station.name} too.`;
+  return `${genreHint} across the US, UK, Canada, Singapore, Malaysia, and the Gulf rely on ${SITE_NAME} to stay connected to ${lang} culture. Bookmark this page and share it with family on WhatsApp so they can listen to ${station.name} too.`;
 }
 
 export function buildStationFaqs(station: Station) {
@@ -55,7 +62,7 @@ export function buildStationFaqs(station: Station) {
   return [
     {
       question: `Is ${station.name} free to listen?`,
-      answer: `Yes. ${SITE_NAME} provides free, unlimited access to ${station.name} and every Tamil radio station in our catalogue.`,
+      answer: `Yes. ${SITE_NAME} provides free, unlimited access to ${station.name} and every ${languageLabel(station)} radio station in our catalogue.`,
     },
     {
       question: `Can I listen to ${station.name} on my phone?`,
@@ -65,7 +72,7 @@ export function buildStationFaqs(station: Station) {
       question: `What audio quality does ${station.name} offer?`,
       answer:
         station.bitrate > 0
-          ? `${station.name} streams at ${station.bitrate} kbps for clear Tamil audio on Wi-Fi and mobile data.`
+          ? `${station.name} streams at ${station.bitrate} kbps for clear ${languageLabel(station)} audio on Wi-Fi and mobile data.`
           : `${station.name} uses adaptive bitrate streaming that adjusts to your internet connection.`,
     },
     {

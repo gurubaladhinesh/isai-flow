@@ -3,6 +3,10 @@ import { getAllTamilStations } from "@/src/lib/radio-api";
 import { createSlug } from "@/src/lib/slug";
 import { getAllBlogSlugs } from "@/src/lib/blog";
 import { POPULAR_GENRES, POPULAR_LOCATIONS, SITE_URL } from "@/src/lib/site";
+import {
+  DEFAULT_LANGUAGE_SLUG,
+  LIVE_LANGUAGES,
+} from "@/src/lib/languages";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
@@ -12,6 +16,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 1,
     },
+    ...LIVE_LANGUAGES.filter(
+      (language) => language.slug !== DEFAULT_LANGUAGE_SLUG,
+    ).map((language) => ({
+      url: `${SITE_URL}/listen/${language.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "daily" as const,
+      priority: 0.9,
+    })),
     ...POPULAR_GENRES.map((genre) => ({
       url: `${SITE_URL}/genre/${genre.slug}`,
       lastModified: new Date(),

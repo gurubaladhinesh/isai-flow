@@ -3,23 +3,25 @@ import type { Station } from "@/src/lib/radio-api";
 const cache = new Map<string, Station[]>();
 const inflight = new Map<string, Promise<Station[]>>();
 
-function cacheKey(offset: number, limit: number): string {
-  return `${offset}:${limit}`;
+function cacheKey(offset: number, limit: number, language = "tamil"): string {
+  return `${language}:${offset}:${limit}`;
 }
 
 export function seedStationPage(
   offset: number,
   limit: number,
   stations: Station[],
+  language = "tamil",
 ): void {
-  cache.set(cacheKey(offset, limit), stations);
+  cache.set(cacheKey(offset, limit, language), stations);
 }
 
 export async function fetchStationPage(
   offset: number,
   limit: number,
+  language = "tamil",
 ): Promise<Station[]> {
-  const key = cacheKey(offset, limit);
+  const key = cacheKey(offset, limit, language);
   const cached = cache.get(key);
   if (cached) return cached;
 
@@ -30,6 +32,7 @@ export async function fetchStationPage(
     const params = new URLSearchParams({
       offset: String(offset),
       limit: String(limit),
+      language,
     });
     const response = await fetch(`/api/stations?${params.toString()}`);
     if (!response.ok) {
@@ -50,10 +53,14 @@ export async function fetchStationPage(
   }
 }
 
-export function prefetchStationPage(offset: number, limit: number): void {
-  const key = cacheKey(offset, limit);
+export function prefetchStationPage(
+  offset: number,
+  limit: number,
+  language = "tamil",
+): void {
+  const key = cacheKey(offset, limit, language);
   if (cache.has(key) || inflight.has(key)) return;
-  void fetchStationPage(offset, limit).catch(() => {
+  void fetchStationPage(offset, limit, language).catch(() => {
     // Prefetch failures are non-fatal; scroll retry will handle it.
   });
 }

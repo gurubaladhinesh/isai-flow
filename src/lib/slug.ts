@@ -7,7 +7,7 @@ export function createSlug(name: string): string {
     .toLowerCase()
     .trim()
     .replace(/[\s_]+/g, '-') // Replace spaces and underscores with hyphens
-    .replace(/[^a-z0-9-\u0B80-\u0BFF]/g, '') // Keep alphanumeric, hyphens, and Tamil Unicode
+    .replace(/[^a-z0-9-\u0900-\u0D7F]/g, '') // Keep alphanumeric, hyphens, and Indic scripts
     .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
     .replace(/^-|-$/g, '') // Remove leading/trailing hyphens
     .slice(0, 100); // Limit length to 100 characters

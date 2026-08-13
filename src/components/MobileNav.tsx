@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Clock, Heart, Menu, X } from "lucide-react";
 import { usePlayer } from "@/src/context/PlayerContext";
+import { LanguageNav } from "@/src/components/LanguageNav";
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
@@ -56,6 +57,10 @@ export function MobileNav() {
               >
                 <X className="h-5 w-5" />
               </button>
+            </div>
+
+            <div className="mb-6" onClick={() => setOpen(false)}>
+              <LanguageNav />
             </div>
 
             <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">

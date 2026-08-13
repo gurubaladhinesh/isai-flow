@@ -121,7 +121,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
                         {SITE_NAME}
                       </div>
                       <div className="text-[11px] text-[var(--muted)]">
-                        Tamil Internet Radio
+                        Internet Radio
                       </div>
                     </div>
                   </div>
