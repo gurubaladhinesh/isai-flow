@@ -1,4 +1,8 @@
-import type { Station } from "@/src/lib/radio-api";
+import {
+  ALL_TAMIL_STATIONS_LIMIT,
+  type Station,
+} from "@/src/lib/radio-api";
+import { stationMatchesQuery } from "@/src/lib/station-search";
 
 const cache = new Map<string, Station[]>();
 const inflight = new Map<string, Promise<Station[]>>();
@@ -50,19 +54,21 @@ export async function fetchStationPage(
   }
 }
 
-export async function searchStations(
-  query: string,
-  signal?: AbortSignal,
-): Promise<Station[]> {
-  const params = new URLSearchParams({ q: query });
-  const response = await fetch(`/api/stations/search?${params.toString()}`, {
-    signal,
+export async function fetchAllStations(): Promise<Station[]> {
+  return fetchStationPage(0, ALL_TAMIL_STATIONS_LIMIT);
+}
+
+export function prefetchAllStations(): void {
+  void fetchAllStations().catch(() => {
+    // Prefetch failures are non-fatal; search will retry.
   });
-  if (!response.ok) {
-    throw new Error("Failed to search stations");
-  }
-  const json = (await response.json()) as { stations: Station[] };
-  return json.stations ?? [];
+}
+
+export async function searchStations(query: string): Promise<Station[]> {
+  const stations = await fetchAllStations();
+  return stations
+    .filter((station) => stationMatchesQuery(station, query))
+    .sort((a, b) => b.clickcount - a.clickcount);
 }
 
 export function prefetchStationPage(offset: number, limit: number): void {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
-import { getTamilStations } from "@/src/lib/radio-api";
+import { ALL_TAMIL_STATIONS_LIMIT, getTamilStations } from "@/src/lib/radio-api";
 
 const getCachedTamilStations = unstable_cache(
   async (offset: number, limit: number) => getTamilStations({ offset, limit }),
@@ -15,7 +15,10 @@ export async function GET(request: Request) {
   const limitParam = searchParams.get("limit");
 
   const offset = Number.isFinite(Number(offsetParam)) ? Number(offsetParam) : 0;
-  const limit = Number.isFinite(Number(limitParam)) ? Number(limitParam) : 48;
+  const parsedLimit = Number.isFinite(Number(limitParam))
+    ? Number(limitParam)
+    : 48;
+  const limit = Math.min(Math.max(parsedLimit, 1), ALL_TAMIL_STATIONS_LIMIT);
 
   try {
     const stations = await getCachedTamilStations(offset, limit);

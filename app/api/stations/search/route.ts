@@ -3,6 +3,8 @@ import { unstable_cache } from "next/cache";
 import { getAllTamilStations } from "@/src/lib/radio-api";
 import { stationMatchesQuery } from "@/src/lib/station-search";
 
+export const maxDuration = 15;
+
 const getCachedAllTamilStations = unstable_cache(
   async () => getAllTamilStations(),
   ["tamil-stations-all"],

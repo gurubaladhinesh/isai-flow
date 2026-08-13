@@ -65,26 +65,13 @@ export async function getTamilStations(
   return Array.from(uniqueById.values());
 }
 
+export const ALL_TAMIL_STATIONS_LIMIT = 1000;
+
 export async function getAllTamilStations(): Promise<Station[]> {
-  const allStations: Station[] = [];
-  const pageSize = 100;
-  let offset = 0;
-
-  while (true) {
-    const batch = await getTamilStations({ offset, limit: pageSize });
-    if (batch.length === 0) {
-      break;
-    }
-
-    allStations.push(...batch);
-    offset += batch.length;
-
-    if (batch.length < pageSize) {
-      break;
-    }
-  }
-
-  return allStations;
+  // One Radio Browser request is enough for the Tamil catalogue and stays
+  // within Vercel serverless time limits. Sequential paging was too slow and
+  // got cancelled when the client aborted the search request.
+  return getTamilStations({ offset: 0, limit: ALL_TAMIL_STATIONS_LIMIT });
 }
 
 export async function getStationsByTag(
