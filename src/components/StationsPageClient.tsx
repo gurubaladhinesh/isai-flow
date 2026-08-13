@@ -14,10 +14,12 @@ import { Search, X } from "lucide-react";
 import type { Station } from "@/src/lib/radio-api";
 import { StationGrid } from "@/src/components/StationGrid";
 import { usePlayer } from "@/src/context/PlayerContext";
+import { stationMatchesQuery } from "@/src/lib/station-search";
 import {
   fetchStationPage,
   mergeStations,
   prefetchStationPage,
+  searchStations,
   seedStationPage,
 } from "@/src/lib/station-page-cache";
 import {
@@ -68,6 +70,9 @@ export function StationsPageClient({
   const [hasMore, setHasMore] = useState(true);
   const [query, setQuery] = useState("");
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [searchResults, setSearchResults] = useState<Station[] | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const deferredQuery = useDeferredValue(query.trim().toLowerCase());
   const loadTriggerRef = useRef<HTMLDivElement | null>(null);
   const catalogRef = useRef<HTMLDivElement | null>(null);
@@ -242,22 +247,45 @@ export function StationsPageClient({
     return () => observer.disconnect();
   }, [hasMore, deferredQuery, loadMore, stations.length]);
 
+  useEffect(() => {
+    if (!deferredQuery) {
+      setSearchResults(null);
+      setIsSearching(false);
+      setSearchError(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    setIsSearching(true);
+    setSearchError(null);
+    setSearchResults(null);
+
+    void (async () => {
+      try {
+        const matches = await searchStations(deferredQuery, controller.signal);
+        setSearchResults(matches);
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        console.error(error);
+        setSearchError("Couldn’t search the full catalogue. Showing loaded stations.");
+        setSearchResults(null);
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsSearching(false);
+        }
+      }
+    })();
+
+    return () => controller.abort();
+  }, [deferredQuery]);
+
   const filteredStations = useMemo(() => {
     if (!deferredQuery) return stations;
-    return stations.filter((station) => {
-      const haystack = [
-        station.name,
-        station.country,
-        station.state,
-        station.tags,
-        station.language,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(deferredQuery);
-    });
-  }, [stations, deferredQuery]);
+    if (searchResults) return searchResults;
+    return stations.filter((station) =>
+      stationMatchesQuery(station, deferredQuery),
+    );
+  }, [stations, deferredQuery, searchResults]);
 
   const popularStations = useMemo(
     () => [...stations].sort((a, b) => b.clickcount - a.clickcount).slice(0, 8),
@@ -344,13 +372,20 @@ export function StationsPageClient({
           title={deferredQuery ? "Search results" : "All stations"}
           description={
             deferredQuery
-              ? `${filteredStations.length} match${filteredStations.length === 1 ? "" : "es"} for “${query.trim()}”`
+              ? isSearching
+                ? `Searching all stations for “${query.trim()}”…`
+                : `${filteredStations.length} match${filteredStations.length === 1 ? "" : "es"} for “${query.trim()}”`
               : "Handpicked Tamil radio streams from around the world."
           }
         />
         <StationGrid
           stations={catalogStations}
-          loadingCount={!deferredQuery && isLoading ? SKELETON_COUNT : 0}
+          loadingCount={
+            (!deferredQuery && isLoading) ||
+            (deferredQuery && isSearching && catalogStations.length === 0)
+              ? SKELETON_COUNT
+              : 0
+          }
           priorityCount={8}
           loadTriggerIndex={
             !deferredQuery && catalogStations.length > 0
@@ -360,6 +395,12 @@ export function StationsPageClient({
           onLoadTrigger={!deferredQuery ? handleLoadTrigger : undefined}
         />
       </section>
+
+      {deferredQuery && searchError ? (
+        <p className="mx-auto text-center text-[11px] text-[var(--warm)]">
+          {searchError}
+        </p>
+      ) : null}
 
       {!deferredQuery && loadError ? (
         <button

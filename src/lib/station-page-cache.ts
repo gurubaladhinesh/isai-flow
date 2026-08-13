@@ -50,6 +50,21 @@ export async function fetchStationPage(
   }
 }
 
+export async function searchStations(
+  query: string,
+  signal?: AbortSignal,
+): Promise<Station[]> {
+  const params = new URLSearchParams({ q: query });
+  const response = await fetch(`/api/stations/search?${params.toString()}`, {
+    signal,
+  });
+  if (!response.ok) {
+    throw new Error("Failed to search stations");
+  }
+  const json = (await response.json()) as { stations: Station[] };
+  return json.stations ?? [];
+}
+
 export function prefetchStationPage(offset: number, limit: number): void {
   const key = cacheKey(offset, limit);
   if (cache.has(key) || inflight.has(key)) return;
