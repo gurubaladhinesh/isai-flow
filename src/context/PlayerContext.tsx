@@ -140,6 +140,22 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     audio.volume = volume;
   }, [volume]);
 
+  // Sync UI with OS media keys (e.g. Mac play/pause) and actual audio state
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+
+    audio.addEventListener("play", onPlay);
+    audio.addEventListener("pause", onPause);
+    return () => {
+      audio.removeEventListener("play", onPlay);
+      audio.removeEventListener("pause", onPause);
+    };
+  }, []);
+
   useEffect(() => {
     isPlayingRef.current = isPlaying;
   }, [isPlaying]);
